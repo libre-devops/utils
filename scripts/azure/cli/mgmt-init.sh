@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-SUBSCRIPTION_ID="example"
-SHORTHAND_NAME="exm"
+SUBSCRIPTION_ID="libredevops-sub"
+SHORTHAND_NAME="ldo"
 SHORTHAND_ENV="tst"
 SHORTHAND_LOCATION="euw"
 LONGHAND_LOCATION="westeurope"
