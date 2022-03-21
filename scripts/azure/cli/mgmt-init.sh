@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-SUBSCRIPTION_ID="craigthackerx-dev-subscription"
-SHORTHAND_NAME="azdo"
+SUBSCRIPTION_ID="example"
+SHORTHAND_NAME="exm"
 SHORTHAND_ENV="tst"
 SHORTHAND_LOCATION="euw"
 LONGHAND_LOCATION="westeurope"
