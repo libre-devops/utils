@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-SUBSCRIPTION_ID="ExampleSubIDorName"
-SHORTHAND_NAME="exm"
-SHORTHAND_ENV="prd"
+SUBSCRIPTION_ID="craigthackerx-dev-subscription"
+SHORTHAND_NAME="azdo"
+SHORTHAND_ENV="dev"
 SHORTHAND_LOCATION="euw"
 LONGHAND_LOCATION="westeurope"
 
@@ -34,8 +34,10 @@ clean_on_exit() {
 
 #Without this, you have a chicken and an egg scenario, you need a storage account for terraform, you need an ARM template for ARM, or you can create in portal and terraform import, I prefer just using Azure-CLI and "one and done" it
 print_alert "This script is intended to be ran in the Cloud Shell in Azure to setup your pre-requisite items in a fresh tenant" && sleep 3s && \
-
+az config set extension.use_dynamic_install=yes_without_prompt
 az account set --subscription "${SUBSCRIPTION_ID}" && \
+
+spokeSubId=$(az account show --query id -o tsv)
 
     #Create Management Resource group and export its values
 if
@@ -85,6 +87,44 @@ else
     print_error "Something went wrong making the management keyvault." && clean_on_exit && exit 1
 fi
 
+if
+ az identity create \
+ --name id-${SHORTHAND_NAME}-${SHORTHAND_LOCATION}-${SHORTHAND_ENV}-mgt-01 \
+ --resource-group "${spokeMgmtRgName}" \
+ --location "${LONGHAND_LOCATION}" \
+ --subscription "${SUBSCRIPTION_ID}"
+
+ spokeManagedIdentityId=$(az identity show \
+ --name "id-${SHORTHAND_NAME}-${SHORTHAND_LOCATION}-${SHORTHAND_ENV}-mgt-01" \
+ --resource-group "${spokeMgmtRgName}" \
+ --subscription "${SUBSCRIPTION_ID}" \
+    --query "id" -o tsv)
+
+  spokeManagedIdentityClientId=$(az identity show \
+ --name "id-${SHORTHAND_NAME}-${SHORTHAND_LOCATION}-${SHORTHAND_ENV}-mgt-01" \
+ --resource-group "${spokeMgmtRgName}" \
+ --subscription "${SUBSCRIPTION_ID}" \
+    --query "clientId" -o tsv)
+
+ spokeManagedIdentityPrincipalId=$(az identity show \
+ --name "id-${SHORTHAND_NAME}-${SHORTHAND_LOCATION}-${SHORTHAND_ENV}-mgt-01" \
+ --resource-group "${spokeMgmtRgName}" \
+ --subscription "${SUBSCRIPTION_ID}" \
+    --query "principalId" -o tsv)
+
+
+  spokeManagedIdentityTenantId=$(az identity show \
+ --name "id-${SHORTHAND_NAME}-${SHORTHAND_LOCATION}-${SHORTHAND_ENV}-mgt-01" \
+ --resource-group "${spokeMgmtRgName}" \
+ --subscription "${SUBSCRIPTION_ID}" \
+    --query "tenantId" -o tsv)
+
+then
+    print_success "User Assigned Managed Identity Created" && sleep 2s
+else
+    print_error "Something went wrong making user-assigned managed identity." && clean_on_exit && exit 1
+fi
+
 #Create Keyvault secret for Local Admin in the Keyvault
 if
 
@@ -99,6 +139,24 @@ then
     print_success "Keyvault secret has been made for the Local Admin User" && sleep 2s
 else
     print_error "Something has went wrong with creating the keyvault secret, check the logs." && clean_on_exit && exit 1
+
+fi
+
+if
+
+export MSYS_NO_PATHCONV=1
+
+az role assignment create \
+--role "Owner" \
+--assignee "${spokeManagedIdentityClientId}" \
+--scope "/subscriptions/${spokeSubId}"
+
+unset MSYS_NO_PATHCONV
+
+then
+    print_success "User assigned managed identity is assigned as owner to its own sub" && sleep 2s
+else
+    print_error "Something went wrong assigned owner to the sub." && clean_on_exit && exit 1
 
 fi
 
@@ -181,6 +239,14 @@ az keyvault set-policy \
 --upn "${signedInUserUpn}" \
 --storage-permissions get list delete set update regeneratekey getsas listsas deletesas setsas recover backup restore purge
 
+az keyvault set-policy \
+--name "${spokeKvName}" \
+--subscription "${spokeSubId}" \
+--object-id "${spokeManagedIdentityPrincipalId}" \
+--secret-permissions get list set delete recover backup restore purge \
+--certificate-permissions get list update create import delete recover backup restore purge \
+--key-permissions get list update create import delete recover backup restore decrypt encrypt verify sign purge
+
 az keyvault storage add \
 --vault-name "${spokeKvName}" \
 -n "${spokeSaName}" \
@@ -197,6 +263,7 @@ az keyvault storage add \
 --regeneration-period P90D \
 --resource-id "${spokeSaId}"
 
+unset MSYS_NO_PATHCONV
 
 then
   print_success "Storage account now being managed by keyvault" && sleep 2s
