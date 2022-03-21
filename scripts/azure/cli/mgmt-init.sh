@@ -337,6 +337,11 @@ if
     --name "SpokeSaSecondaryKey" \
     --value "${spokeSaSecondaryKey}"
 
+    az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSubId" \
+    --value "${spokeSubId}"
+
 then
   print_success "Secrets set for Terraform in keyvault" && sleep 2s
 
