@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 SUBSCRIPTION_ID="libredevops-sub"
-SHORTHAND_NAME="ldo"
+SHORTHAND_NAME="lbdo"
 SHORTHAND_ENV="tst"
 SHORTHAND_LOCATION="euw"
 LONGHAND_LOCATION="westeurope"
@@ -62,6 +62,7 @@ az config set extension.use_dynamic_install=yes_without_prompt
 az account set --subscription "${SUBSCRIPTION_ID}" && \
 
 spokeSubId=$(az account show --query id -o tsv)
+spokeSubName=$(az account show --query name -o tsv)
 
     #Create Management Resource group and export its values
 if
@@ -121,10 +122,13 @@ az ad sp create-for-rbac \
     --scopes "/subscriptions/${spokeSubId}" > spoke_svp.json && \
     spokeSvpClientId=$(jq -r ".appId" spoke_svp.json) && \
     spokeSvpClientSecret=$(jq -r ".password" spoke_svp.json)
+    spokeSvpTenantId=$(jq -r ".tenant" spoke_svp.json)
 
 spokeSvpObjectId=$(az ad sp show \
         --id "${spokeSvpClientId}" \
     --query "objectId" -o tsv)
+
+spoke
 
 unset MSYS_NO_PATHCONV
 
@@ -179,7 +183,7 @@ spokeAdminSecret=$(openssl rand -base64 21) && \
 
     az keyvault secret set \
     --vault-name "${spokeKvName}" \
-    --name "Local${titleConvertedShorthandName}Admin${titleConvertedShorthandEnv}-pwd" \
+    --name "Local${titleConvertedShorthandName}Admin${titleConvertedShorthandEnv}Pwd" \
     --value "${spokeAdminSecret}"
 
 then
@@ -221,7 +225,7 @@ ssh-keygen -b 4096 -t rsa -f "/tmp/${lowerConvertedShorthandName}-${lowerConvert
 
     az keyvault secret set \
     --vault-name "${spokeKvName}" \
-    --name "ssh-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-key-mgt"  \
+    --name "Ssh${titleConvertedShorthandName}${titleConvertedShorthandLocation}${titleConvertedShorthandEnv}Key"  \
     --file "/tmp/${lowerConvertedShorthandName}-${lowerConvertedShorthandEnv}-ssh/azureid_rsa.key" && \
 
     rm -rf /tmp/${lowerConvertedShorthandName}-${lowerConvertedShorthandEnv}-ssh && echo "Keys created"
@@ -304,6 +308,14 @@ az keyvault set-policy \
 --certificate-permissions get list update create import delete recover backup restore purge \
 --key-permissions get list update create import delete recover backup restore decrypt encrypt verify sign purge
 
+az keyvault set-policy \
+--name "${spokeKvName}" \
+--subscription "${spokeSubId}" \
+--object-id "${spokeSvpObjectId}" \
+--secret-permissions get list set delete recover backup restore purge \
+--certificate-permissions get list update create import delete recover backup restore purge \
+--key-permissions get list update create import delete recover backup restore decrypt encrypt verify sign purge
+
 az keyvault storage add \
 --vault-name "${spokeKvName}" \
 -n "${spokeSaName}" \
@@ -379,6 +391,21 @@ if
     --vault-name "${spokeKvName}" \
     --name "SpokeSvpClientSecret" \
     --value "${spokeSvpClientSecret}"
+
+    az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSvpTenantId" \
+    --value "${spokeSvpTenantId}"
+
+    az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSubName" \
+    --value "${spokeSubName}"
+
+    az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeKvName" \
+    --value "${spokeKvName}"
 
 then
   print_success "Secrets set for Terraform in keyvault" && sleep 2s
