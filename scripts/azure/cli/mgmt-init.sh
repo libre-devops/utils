@@ -2,7 +2,7 @@
 
 SUBSCRIPTION_ID="craigthackerx-dev-subscription"
 SHORTHAND_NAME="azdo"
-SHORTHAND_ENV="dev"
+SHORTHAND_ENV="tst"
 SHORTHAND_LOCATION="euw"
 LONGHAND_LOCATION="westeurope"
 
@@ -26,11 +26,35 @@ print_alert() {
     echo -e "${yellow}$1${nocolor}"
 }
 
+title_case_convert() {
+    sed 's/.*/\L&/; s/[a-z]*/\u&/g' <<<"$1"
+}
+
+upper_case_convert() {
+  sed -e 's/\(.*\)/\L\1/' <<< "$1"
+}
+
+lower_case_convert() {
+  sed -e 's/\(.*\)/\L\1/' <<< "$1"
+}
+
 clean_on_exit() {
     rm -rf "spoke_svp.json"
     az logout
     cat /dev/null > ~/.bash_history && history -c
 }
+
+lowerConvertedShorthandName="$(lower_case_convert $SHORTHAND_NAME)"
+lowerConvertedShorthandEnv="$(lower_case_convert $SHORTHAND_ENV)"
+lowerConvertedShorthandLocation="$(lower_case_convert $SHORTHAND_LOCATION)"
+
+upperConvertedShorthandName="$(upper_case_convert $SHORTHAND_NAME)"
+upperConvertedShorthandEnv="$(upper_case_convert $SHORTHAND_ENV)"
+upperConvertedShorthandLocation="$(upper_case_convert $SHORTHAND_LOCATION)"
+
+titleConvertedShorthandName="$(title_case_convert $SHORTHAND_NAME)"
+titleConvertedShorthandEnv="$(title_case_convert $SHORTHAND_ENV)"
+titleConvertedShorthandLocation="$(title_case_convert $SHORTHAND_LOCATION)"
 
 #Without this, you have a chicken and an egg scenario, you need a storage account for terraform, you need an ARM template for ARM, or you can create in portal and terraform import, I prefer just using Azure-CLI and "one and done" it
 print_alert "This script is intended to be ran in the Cloud Shell in Azure to setup your pre-requisite items in a fresh tenant" && sleep 3s && \
@@ -46,12 +70,12 @@ signedInUserUpn=$(az ad signed-in-user show \
 --query "userPrincipalName" -o tsv)
 
 az group create \
-    --name "rg-${SHORTHAND_NAME}-${SHORTHAND_LOCATION}-${SHORTHAND_ENV}-mgt" \
+    --name "rg-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt" \
     --location "${LONGHAND_LOCATION}" \
     --subscription ${SUBSCRIPTION_ID} && \
 
     spokeMgmtRgName=$(az group show \
-        --resource-group "rg-${SHORTHAND_NAME}-${SHORTHAND_LOCATION}-${SHORTHAND_ENV}-mgt" \
+        --resource-group "rg-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt" \
     --subscription ${SUBSCRIPTION_ID} --query "name" -o tsv)
 
 then
@@ -64,19 +88,19 @@ fi
 if
 
 az keyvault create \
-    --name "kv-${SHORTHAND_NAME}-${SHORTHAND_LOCATION}-${SHORTHAND_ENV}-mgt-01" \
+    --name "kv-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
     --resource-group "${spokeMgmtRgName}" \
     --location "${LONGHAND_LOCATION}" \
     --subscription "${SUBSCRIPTION_ID}"
 
 spokeKvName=$(az keyvault show \
-        --name "kv-${SHORTHAND_NAME}-${SHORTHAND_LOCATION}-${SHORTHAND_ENV}-mgt-01" \
+        --name "kv-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
         --resource-group "${spokeMgmtRgName}" \
         --subscription "${SUBSCRIPTION_ID}" \
     --query "name" -o tsv)
 
 spokeKvId=$(az keyvault show \
-        --name "kv-${SHORTHAND_NAME}-${SHORTHAND_LOCATION}-${SHORTHAND_ENV}-mgt-01" \
+        --name "kv-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
         --resource-group "${spokeMgmtRgName}" \
         --subscription "${SUBSCRIPTION_ID}" \
     --query "id" -o tsv)
@@ -89,32 +113,32 @@ fi
 
 if
  az identity create \
- --name id-${SHORTHAND_NAME}-${SHORTHAND_LOCATION}-${SHORTHAND_ENV}-mgt-01 \
+ --name "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
  --resource-group "${spokeMgmtRgName}" \
  --location "${LONGHAND_LOCATION}" \
  --subscription "${SUBSCRIPTION_ID}"
 
  spokeManagedIdentityId=$(az identity show \
- --name "id-${SHORTHAND_NAME}-${SHORTHAND_LOCATION}-${SHORTHAND_ENV}-mgt-01" \
+ --name "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
  --resource-group "${spokeMgmtRgName}" \
  --subscription "${SUBSCRIPTION_ID}" \
     --query "id" -o tsv)
 
   spokeManagedIdentityClientId=$(az identity show \
- --name "id-${SHORTHAND_NAME}-${SHORTHAND_LOCATION}-${SHORTHAND_ENV}-mgt-01" \
+ --name "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
  --resource-group "${spokeMgmtRgName}" \
  --subscription "${SUBSCRIPTION_ID}" \
     --query "clientId" -o tsv)
 
  spokeManagedIdentityPrincipalId=$(az identity show \
- --name "id-${SHORTHAND_NAME}-${SHORTHAND_LOCATION}-${SHORTHAND_ENV}-mgt-01" \
+ --name "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
  --resource-group "${spokeMgmtRgName}" \
  --subscription "${SUBSCRIPTION_ID}" \
     --query "principalId" -o tsv)
 
 
   spokeManagedIdentityTenantId=$(az identity show \
- --name "id-${SHORTHAND_NAME}-${SHORTHAND_LOCATION}-${SHORTHAND_ENV}-mgt-01" \
+ --name "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
  --resource-group "${spokeMgmtRgName}" \
  --subscription "${SUBSCRIPTION_ID}" \
     --query "tenantId" -o tsv)
@@ -132,7 +156,7 @@ spokeAdminSecret=$(openssl rand -base64 21) && \
 
     az keyvault secret set \
     --vault-name "${spokeKvName}" \
-    --name "Local${SHORTHAND_NAME}Admin${SHORTHAND_ENV}-pwd" \
+    --name "Local${titleConvertedShorthandName}Admin${titleConvertedShorthandEnv}-pwd" \
     --value "${spokeAdminSecret}"
 
 then
@@ -163,21 +187,21 @@ fi
 #Create SSH Key for Linux boxes
 if
 
-mkdir -p "/tmp/${SHORTHAND_NAME}-${SHORTHAND_ENV}-ssh"
-ssh-keygen -b 4096 -t rsa -f "/tmp/${SHORTHAND_NAME}-${SHORTHAND_ENV}-ssh/azureid_rsa.key" -q -N '' && \
+mkdir -p "/tmp/${lowerConvertedShorthandName}-${lowerConvertedShorthandEnv}-ssh"
+ssh-keygen -b 4096 -t rsa -f "/tmp/${lowerConvertedShorthandName}-${lowerConvertedShorthandEnv}-ssh/azureid_rsa.key" -q -N '' && \
 
     az sshkey create \
     --location "${LONGHAND_LOCATION}" \
-    --public-key "@/tmp/${SHORTHAND_NAME}-${SHORTHAND_ENV}-ssh/azureid_rsa.key.pub" \
+    --public-key "@/tmp/${lowerConvertedShorthandName}-${lowerConvertedShorthandEnv}-ssh/azureid_rsa.key.pub" \
     --resource-group "${spokeMgmtRgName}" \
-    --name "ssh-${SHORTHAND_NAME}-${SHORTHAND_LOCATION}-${SHORTHAND_ENV}-pub-mgt" && \
+    --name "ssh-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-pub-mgt" && \
 
     az keyvault secret set \
     --vault-name "${spokeKvName}" \
-    --name "ssh-${SHORTHAND_NAME}-${SHORTHAND_LOCATION}-${SHORTHAND_ENV}-key-mgt"  \
-    --file "/tmp/${SHORTHAND_NAME}-${SHORTHAND_ENV}-ssh/azureid_rsa.key" && \
+    --name "ssh-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-key-mgt"  \
+    --file "/tmp/${lowerConvertedShorthandName}-${lowerConvertedShorthandEnv}-ssh/azureid_rsa.key" && \
 
-    rm -rf /tmp/${SHORTHAND_NAME}-${SHORTHAND_ENV}-ssh && echo "Keys created"
+    rm -rf /tmp/${lowerConvertedShorthandName}-${lowerConvertedShorthandEnv}-ssh && echo "Keys created"
 
 then
     print_success "SSH keys have been generated and stored appropriately" && sleep 2s
@@ -196,25 +220,35 @@ az storage account create \
     --sku "Standard_LRS" \
     --access-tier "Hot" \
     --resource-group "${spokeMgmtRgName}" \
-    --name "sa${SHORTHAND_NAME}${SHORTHAND_LOCATION}${SHORTHAND_ENV}mgt01" && \
+    --name "sa${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}mgt01" && \
 
     az storage container create \
-    --account-name "sa${SHORTHAND_NAME}${SHORTHAND_LOCATION}${SHORTHAND_ENV}mgt01" \
+    --account-name "sa${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}mgt01" \
     --public-access "off" \
     --resource-group "${spokeMgmtRgName}" \
-    --name "blob${SHORTHAND_NAME}${SHORTHAND_LOCATION}${SHORTHAND_ENV}tfm01"
+    --name "blob${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}tfm01"
 
   spokeSaId=$(az storage account show \
-        --name "sa${SHORTHAND_NAME}${SHORTHAND_LOCATION}${SHORTHAND_ENV}mgt01" \
+        --name "sa${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}mgt01" \
         --resource-group "${spokeMgmtRgName}" \
         --subscription "${SUBSCRIPTION_ID}" \
     --query "id" -o tsv)
 
   spokeSaName=$(az storage account show \
-      --name "sa${SHORTHAND_NAME}${SHORTHAND_LOCATION}${SHORTHAND_ENV}mgt01" \
+      --name "sa${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}mgt01" \
       --resource-group "${spokeMgmtRgName}" \
       --subscription "${SUBSCRIPTION_ID}" \
   --query "name" -o tsv)
+
+  spokeSaPrimaryKey=$(az storage account keys list \
+  --resource-group "${spokeMgmtRgName}" \
+  --account-name "${spokeSaName}" \
+  --query "[0].value" -o tsv)
+
+  spokeSaSecondaryKey=$(az storage account keys list \
+  --resource-group "${spokeMgmtRgName}" \
+  --account-name "${spokeSaName}" \
+  --query "[1].value" -o tsv)
 
 then
     print_success "Storage account created" && sleep 2s
@@ -255,14 +289,6 @@ az keyvault storage add \
 --regeneration-period P90D \
 --resource-id "${spokeSaId}"
 
-az keyvault storage add \
---vault-name "${spokeKvName}" \
--n "${spokeSaName}" \
---active-key-name key2 \
---auto-regenerate-key \
---regeneration-period P90D \
---resource-id "${spokeSaId}"
-
 unset MSYS_NO_PATHCONV
 
 then
@@ -271,5 +297,51 @@ then
 else
 
   print_error "Something has went wrong setting the storage account to be managed by keyvault  Error Code CLOUD06" && clean_on_exit && exit 1
+
+fi
+
+if
+
+    az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeManagedIdentityClientId" \
+    --value "${spokeManagedIdentityClientId}"
+
+    az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeManagedIdentityTenantId" \
+    --value "${spokeManagedIdentityTenantId}"
+
+    az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSaRgName" \
+    --value "${spokeMgmtRgName}"
+
+    az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSaName" \
+    --value "${spokeSaName}"
+
+    az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSaBlobContainerName" \
+    --value "blob${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}tfm01"
+
+    az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSaPrimaryKey" \
+    --value "${spokeSaPrimaryKey}"
+
+    az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSaSecondaryKey" \
+    --value "${spokeSaSecondaryKey}"
+
+then
+  print_success "Secrets set for Terraform in keyvault" && sleep 2s
+
+else
+
+  print_error "Something has went wrong setting secrets in the keyvault.  Error Code CLOUD07" && clean_on_exit && exit 1
 
 fi
