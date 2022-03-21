@@ -113,6 +113,8 @@ fi
 
 if
 
+export MSYS_NO_PATHCONV=1
+
 az ad sp create-for-rbac \
     --name "svp-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
     --role "Owner" \
@@ -123,6 +125,8 @@ az ad sp create-for-rbac \
 spokeSvpObjectId=$(az ad sp show \
         --id "${spokeSvpClientId}" \
     --query "objectId" -o tsv)
+
+unset MSYS_NO_PATHCONV
 
 then
     print_success "Management keyvault made for spoke" && sleep 2s
@@ -384,3 +388,5 @@ else
   print_error "Something has went wrong setting secrets in the keyvault.  Error Code CLOUD07" && clean_on_exit && exit 1
 
 fi
+
+clean_on_exit
