@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-SUBSCRIPTION_ID="CyberScot-Hw-Mvp"
-SHORTHAND_NAME="hw"
-SHORTHAND_ENV="mvp"
+SUBSCRIPTION_ID="ExampleSubIDorName"
+SHORTHAND_NAME="exm"
+SHORTHAND_ENV="prd"
 SHORTHAND_LOCATION="euw"
 LONGHAND_LOCATION="westeurope"
 
@@ -169,6 +169,8 @@ fi
 
 if
 
+export MSYS_NO_PATHCONV=1
+
 az role assignment create \
 --role "Storage Account Key Operator Service Role" \
 --assignee "https://vault.azure.net" \
@@ -180,7 +182,20 @@ az keyvault set-policy \
 --storage-permissions get list delete set update regeneratekey getsas listsas deletesas setsas recover backup restore purge
 
 az keyvault storage add \
---vault-name "${spokeKvName}" -n "${spokeSaName}" --active-key-name key1 --auto-regenerate-key --regeneration-period P90D --resource-id "${spokeSaId]}"
+--vault-name "${spokeKvName}" \
+-n "${spokeSaName}" \
+--active-key-name key1 \
+--auto-regenerate-key \
+--regeneration-period P90D \
+--resource-id "${spokeSaId}"
+
+az keyvault storage add \
+--vault-name "${spokeKvName}" \
+-n "${spokeSaName}" \
+--active-key-name key2 \
+--auto-regenerate-key \
+--regeneration-period P90D \
+--resource-id "${spokeSaId}"
 
 
 then
