@@ -112,6 +112,25 @@ else
 fi
 
 if
+
+az ad sp create-for-rbac \
+    --name "svp-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
+    --role "Owner" \
+    --scopes "/subscriptions/${spokeSubId}" > spoke_svp.json && \
+    spokeSvpClientId=$(jq -r ".appId" spoke_svp.json) && \
+    spokeSvpClientSecret=$(jq -r ".password" spoke_svp.json)
+
+spokeSvpObjectId=$(az ad sp show \
+        --id "${spokeSvpClientId}" \
+    --query "objectId" -o tsv)
+
+then
+    print_success "Management keyvault made for spoke" && sleep 2s
+else
+    print_error "Something went wrong making the management keyvault." && clean_on_exit && exit 1
+fi
+
+if
  az identity create \
  --name "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
  --resource-group "${spokeMgmtRgName}" \
@@ -341,6 +360,21 @@ if
     --vault-name "${spokeKvName}" \
     --name "SpokeSubId" \
     --value "${spokeSubId}"
+
+    az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSvpClientId" \
+    --value "${spokeSvpClientId}"
+
+    az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSvpObjectId" \
+    --value "${spokeSvpObjectId}"
+
+    az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSvpClientSecret" \
+    --value "${spokeSvpClientSecret}"
 
 then
   print_success "Secrets set for Terraform in keyvault" && sleep 2s
