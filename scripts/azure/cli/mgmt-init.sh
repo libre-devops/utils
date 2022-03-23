@@ -163,12 +163,30 @@ if
  --subscription "${SUBSCRIPTION_ID}" \
     --query "principalId" -o tsv)
 
-
   spokeManagedIdentityTenantId=$(az identity show \
  --name "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
  --resource-group "${spokeMgmtRgName}" \
  --subscription "${SUBSCRIPTION_ID}" \
     --query "tenantId" -o tsv)
+
+
+  export MSYS_NO_PATHCONV=1
+
+  az role assignment create \
+  --role "Owner" \
+  --assignee "${spokeManagedIdentityClientId}" \
+  --scope "/subscriptions/${spokeSubId}"
+
+  az keyvault set-policy \
+  --name "${spokeKvName}" \
+  --subscription "${spokeSubId}" \
+  --object-id "${spokeManagedIdentityPrincipalId}" \
+  --secret-permissions get list set delete recover backup restore \
+  --certificate-permissions get list update create import delete recover backup restore \
+  --key-permissions get list update create import delete recover backup restore decrypt encrypt verify sign
+
+  unset MSYS_NO_PATHCONV
+
 
 then
     print_success "User Assigned Managed Identity Created" && sleep 2s
@@ -190,24 +208,6 @@ then
     print_success "Keyvault secret has been made for the Local Admin User" && sleep 2s
 else
     print_error "Something has went wrong with creating the keyvault secret, check the logs." && clean_on_exit && exit 1
-
-fi
-
-if
-
-export MSYS_NO_PATHCONV=1
-
-az role assignment create \
---role "Owner" \
---assignee "${spokeManagedIdentityClientId}" \
---scope "/subscriptions/${spokeSubId}"
-
-unset MSYS_NO_PATHCONV
-
-then
-    print_success "User assigned managed identity is assigned as owner to its own sub" && sleep 2s
-else
-    print_error "Something went wrong assigned owner to the sub." && clean_on_exit && exit 1
 
 fi
 
@@ -299,14 +299,6 @@ az keyvault set-policy \
 --name "${spokeKvName}" \
 --upn "${signedInUserUpn}" \
 --storage-permissions get list delete set update regeneratekey getsas listsas deletesas setsas recover backup restore purge
-
-az keyvault set-policy \
---name "${spokeKvName}" \
---subscription "${spokeSubId}" \
---object-id "${spokeManagedIdentityPrincipalId}" \
---secret-permissions get list set delete recover backup restore purge \
---certificate-permissions get list update create import delete recover backup restore purge \
---key-permissions get list update create import delete recover backup restore decrypt encrypt verify sign purge
 
 az keyvault set-policy \
 --name "${spokeKvName}" \
