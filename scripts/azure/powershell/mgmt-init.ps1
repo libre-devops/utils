@@ -110,7 +110,7 @@ if ($null -eq $AzSvpExistsOutput )
     $spokeTenantId = $AzSvpExistsOutput | Select-Object -ExpandProperty AppOwnerOrganizationId
 
     Write-Host "New Service Principal Created!" -ForegroundColor Black -BackgroundColor Green
-    }
+}
 elseif ($null -ne $AzSvpExistsOutput)
 {
     # Set conditional output so variables are the same between both conditions
