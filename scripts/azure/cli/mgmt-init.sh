@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 
+########### Edit the below variables to use script ############
+
 SUBSCRIPTION_ID="libredevops-sub"
 SHORTHAND_NAME="lbdo"
 SHORTHAND_ENV="tst"
 SHORTHAND_LOCATION="euw"
 LONGHAND_LOCATION="westeurope"
+
+########## Do not edit anything below unless you know what you are doing ############
 
 set -xeuo pipefail
 
@@ -128,7 +132,35 @@ spokeSvpObjectId=$(az ad sp show \
         --id "${spokeSvpClientId}" \
     --query "objectId" -o tsv)
 
-spoke
+  az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSubId" \
+    --value "${spokeSubId}"
+
+  az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSvpClientId" \
+    --value "${spokeSvpClientId}"
+
+  az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSvpObjectId" \
+    --value "${spokeSvpObjectId}"
+
+  az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSvpClientSecret" \
+    --value "${spokeSvpClientSecret}"
+
+  az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeTenantId" \
+    --value "${spokeSvpTenantId}"
+
+  az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeKvName" \
+    --value "${spokeKvName}"
 
 unset MSYS_NO_PATHCONV
 
@@ -169,6 +201,10 @@ if
  --subscription "${SUBSCRIPTION_ID}" \
     --query "tenantId" -o tsv)
 
+  az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeManagedIdentityClientId" \
+    --value "${spokeManagedIdentityClientId}"
 
   export MSYS_NO_PATHCONV=1
 
@@ -277,6 +313,33 @@ az storage account create \
   --account-name "${spokeSaName}" \
   --query "[1].value" -o tsv)
 
+ az keyvault secret set \
+  --vault-name "${spokeKvName}" \
+  --name "SpokeSaRgName" \
+  --value "${spokeMgmtRgName}"
+
+  az keyvault secret set \
+  --vault-name "${spokeKvName}" \
+  --name "SpokeSaName" \
+  --value "${spokeSaName}"
+
+  az keyvault secret set \
+  --vault-name "${spokeKvName}" \
+  --name "SpokeSaBlobContainerName" \
+  --value "blob${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}tfm01"
+
+expiryDate=$(date --iso-8601 -d "+90 days")
+  az keyvault secret set \
+  --vault-name "${spokeKvName}" \
+  --name "SpokeSaPrimaryKey" \
+  --value "${spokeSaPrimaryKey}" \
+  --expires "${expiryDate}"
+
+  az keyvault secret set \
+  --vault-name "${spokeKvName}" \
+  --name "SpokeSaSecondaryKey" \
+  --value "${spokeSaSecondaryKey}"
+
 then
     print_success "Storage account created" && sleep 2s
 
@@ -324,87 +387,6 @@ then
 else
 
   print_error "Something has went wrong setting the storage account to be managed by keyvault  Error Code CLOUD06" && clean_on_exit && exit 1
-
-fi
-
-if
-
-    az keyvault secret set \
-    --vault-name "${spokeKvName}" \
-    --name "SpokeManagedIdentityClientId" \
-    --value "${spokeManagedIdentityClientId}"
-
-    az keyvault secret set \
-    --vault-name "${spokeKvName}" \
-    --name "SpokeManagedIdentityTenantId" \
-    --value "${spokeManagedIdentityTenantId}"
-
-    az keyvault secret set \
-    --vault-name "${spokeKvName}" \
-    --name "SpokeSaRgName" \
-    --value "${spokeMgmtRgName}"
-
-    az keyvault secret set \
-    --vault-name "${spokeKvName}" \
-    --name "SpokeSaName" \
-    --value "${spokeSaName}"
-
-    az keyvault secret set \
-    --vault-name "${spokeKvName}" \
-    --name "SpokeSaBlobContainerName" \
-    --value "blob${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}tfm01"
-
-    az keyvault secret set \
-    --vault-name "${spokeKvName}" \
-    --name "SpokeSaPrimaryKey" \
-    --value "${spokeSaPrimaryKey}"
-
-    az keyvault secret set \
-    --vault-name "${spokeKvName}" \
-    --name "SpokeSaSecondaryKey" \
-    --value "${spokeSaSecondaryKey}"
-
-    az keyvault secret set \
-    --vault-name "${spokeKvName}" \
-    --name "SpokeSubId" \
-    --value "${spokeSubId}"
-
-    az keyvault secret set \
-    --vault-name "${spokeKvName}" \
-    --name "SpokeSvpClientId" \
-    --value "${spokeSvpClientId}"
-
-    az keyvault secret set \
-    --vault-name "${spokeKvName}" \
-    --name "SpokeSvpObjectId" \
-    --value "${spokeSvpObjectId}"
-
-    az keyvault secret set \
-    --vault-name "${spokeKvName}" \
-    --name "SpokeSvpClientSecret" \
-    --value "${spokeSvpClientSecret}"
-
-    az keyvault secret set \
-    --vault-name "${spokeKvName}" \
-    --name "SpokeSvpTenantId" \
-    --value "${spokeSvpTenantId}"
-
-    az keyvault secret set \
-    --vault-name "${spokeKvName}" \
-    --name "SpokeSubName" \
-    --value "${spokeSubName}"
-
-    az keyvault secret set \
-    --vault-name "${spokeKvName}" \
-    --name "SpokeKvName" \
-    --value "${spokeKvName}"
-
-then
-  print_success "Secrets set for Terraform in keyvault" && sleep 2s
-
-else
-
-  print_error "Something has went wrong setting secrets in the keyvault.  Error Code CLOUD07" && clean_on_exit && exit 1
 
 fi
 

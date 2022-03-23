@@ -1,3 +1,5 @@
+#!/usr/bin/env pwsh
+
 [Diagnostics.CodeAnalysis.SuppressMessage("PSAvoidUsingInvokeExpression", "")]
 [CmdletBinding()]
 [OutputType([System.Object[]])]
@@ -8,10 +10,14 @@ param(
 
 Set-StrictMode -Version Latest
 
+########### Edit the below variables to use script ############
+
 $SubscriptionId = "libredevops-sub"
 $ShorthandName  = "exm"
-$ShorthandEnv   = "poc"
+$ShorthandEnv   = "uat"
 $ShorthandLocation = "uks"
+
+########## Do not edit anything below unless you know what you are doing ############
 
 if ($ShorthandLocation = "uks")
 {
@@ -41,10 +47,40 @@ $ServicePrincipalName = "svp-${lowerConvertedShorthandName}-${lowerConvertedShor
 $ManagedIdentityName = "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01"
 $PublicSshKeyName = "ssh-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-pub-mgt"
 $PrivateSshKeyName = "Ssh${titleConvertedShorthandName}${titleConvertedShorthandLocation}${titleConvertedShorthandEnv}Key"
+$StorageAccountName = "sa${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}mgt01"
+$BlobContainerName = "blob${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}tfm01"
 
 Write-Host "This script is intended to be ran in the Cloud Shell in Azure to setup your pre-requisite items in a fresh tenant, to setup management resources for terraform.  This is just an example!" -ForegroundColor Black -BackgroundColor Yellow ; Start-Sleep -Seconds 3
 Write-Host "Please be aware, if you are running this script to update an existing service principal, it will give it a new secret, DO not run this script if you do not want this" -ForegroundColor Black -BackgroundColor DarkYellow
 
+$TestCommands = @(
+'Get-AzContext',
+'Set-AzContext',
+'New-AzResourceGroup',
+'New-AzKeyVault',
+'Get-AzKeyvault',
+'Set-AzKeyVaultAccessPolicy',
+'Set-AzKeyVaultSecret',
+'Get-AzADUser',
+'Get-AzADServicePrincipal',
+'New-AzADServicePrincipal',
+'Get-AzUserAssignedIdentity',
+'New-AzSshKey',
+'New-AzStorageAccount',
+'New-AzStorageContainer',
+'Add-AzKeyVaultManagedStorageAccount'
+)
+
+foreach ($command in $TestCommands)
+{
+    # Sets up command testing as Az modules seem to be inconsitently installed
+    if (-not (Get-Command $command))
+    {
+        Write-Host  "${command} doesn't exist, it requires to be installed for this script to continue, try - Install-Module -Name Az.Accounts -AllowClobber or pwsh -Command Install-Module -Name Az -Force -AllowClobber -Scope AllUsers -Repository PSGallery or something similar.  - Exit Code - AZ_CMDS_NOT_INSTALLED"  -ForegroundColor Black -BackgroundColor Yellow ; exit 1
+    }
+}
+
+# Checks for logged in data, if the API responds with Null, you aren't logged in
 $LoggedIn = Get-AzContext
 if ($null -eq $LoggedIn )
 {
@@ -53,13 +89,14 @@ if ($null -eq $LoggedIn )
 elseif ($null -ne $LoggedIn)
 {
     Write-Host "Already logged in, continuing..." -ForegroundColor Black -BackgroundColor Green
-
 }
 
 # Set subscription
 Set-AzContext -Subscription $SubscriptionId
 
-$spokeSubid=$(Get-AzContext | Select-Object -ExpandProperty Subscription)
+$SubId=$(Get-AzContext | Select-Object -ExpandProperty Subscription)
+$spokeSubId = ConvertTo-SecureString "$SubId" -AsPlainText -Force
+
 $signedInUserUpn = $(Get-AzADUser -SignedIn | Select-Object -ExpandProperty Id)
 
 # Create Resource Group
@@ -70,20 +107,39 @@ $spokeMgmtRgName=$(New-AzResourceGroup `
 Write-Host "Resource Group created!" -ForegroundColor Black -BackgroundColor Green
 
 # Create Keyvault
+$KeyvaultExists=$(Get-AzKeyvault -VaultName $KeyvaultName)
 
-New-AzKeyVault `
--Name $KeyvaultName `
--ResourceGroupName $spokeMgmtRgName `
--Location $LonghandLocation  -ErrorAction SilentlyContinue
+if ($null -eq $KeyvaultExists)
+{
+    Write-Host "Keyvault doesn't exist, creating it" -ForegroundColor Black -BackgroundColor Yellow
 
-$KvOutput=$(Get-AzKeyvault `
--VaultName $KeyvaultName `
--ResourceGroupName $spokeMgmtRgName `
--SubscriptionId $spokeSubid)
+    New-AzKeyVault `
+    -Name $KeyvaultName `
+    -ResourceGroupName $spokeMgmtRgName `
+    -Location $LonghandLocation
+}
+elseif ($null -ne $KeyvaultExists)
+{
+    Write-Host "Keyvault already exists, fetching info" -ForegroundColor Black -BackgroundColor Yellow
+}
+
+
+$KvOutput=$(Get-AzKeyvault -VaultName $KeyvaultName)
 
 $spokeKvId=$($KvOutput | Select-Object -ExpandProperty ResourceId)
+$spokeKvName = ConvertTo-SecureString "$KeyvaultName" -AsPlainText -Force
 
-Write-Host "Keyvault Created!" -ForegroundColor Black -BackgroundColor Green
+Set-AzKeyVaultSecret `
+-VaultName $KeyvaultName `
+-Name "SpokeKvname" `
+-SecretValue $spokeKvName
+
+Set-AzKeyVaultSecret `
+-VaultName $KeyvaultName `
+-Name "SpokeSubId" `
+-SecretValue $spokeSubId
+
+Write-Host "Keyvault Setup Complete" -ForegroundColor Black -BackgroundColor Green
 
 Write-Host "Creating new service principal now, be advised, this script will generate a new client secret if the service principal exists, you have 5 seconds to cancel the script now." -ForegroundColor Black -BackgroundColor Yellow ; Start-Sleep -Seconds 5
 
@@ -91,7 +147,7 @@ $AzSvpExistsOutput = $(Get-AzADServicePrincipal `
 -DisplayName $ServicePrincipalName)
 
 
-if ($null -eq $AzSvpExistsOutput )
+if ($null -eq $AzSvpExistsOutput)
 {
     Write-Host "Service Principal does not yet exist, creating now" -ForegroundColor Black -BackgroundColor Yellow ;
 
@@ -100,14 +156,22 @@ if ($null -eq $AzSvpExistsOutput )
     -DisplayName $ServicePrincipalName)
 
     $spokeSvpClientId = $null
-    $spokeSvpClientSecret = $null
     $spokeSvpId = $null
     $spokeTenantId = $null
 
-    $spokeSvpClientId = $AzSvpExistsOutput | Select-Object -ExpandProperty AppId
-    $spokeSvpClientSecret = $AzSvpExistsOutput | Select-Object -ExpandProperty PasswordCredentials | Select-Object -ExpandProperty SecretText
-    $spokeSvpId = $AzSvpExistsOutput | Select-Object -ExpandProperty Id
-    $spokeTenantId = $AzSvpExistsOutput | Select-Object -ExpandProperty AppOwnerOrganizationId
+    $SvpClientId = $null
+    $SvpId = $null
+    $SvpTenantId = $null
+
+    $SvpClientId = $AzSvpExistsOutput | Select-Object -ExpandProperty AppId
+    $SvpClientSecret = $AzSvpExistsOutput | Select-Object -ExpandProperty PasswordCredentials | Select-Object -First 1 | Select-Object -ExpandProperty SecretText
+    $SvpId = $AzSvpExistsOutput | Select-Object -ExpandProperty Id
+    $SvpTenantId = $AzSvpExistsOutput | Select-Object -ExpandProperty AppOwnerOrganizationId
+
+    $spokeSvpClientId = ConvertTo-SecureString "$SvpClientId" -AsPlainText -Force
+    $spokeSvpClientSecret = ConvertTo-SecureString "$SvpClientSecret" -AsPlainText -Force
+    $spokeSvpId = ConvertTo-SecureString "$SvpId" -AsPlainText -Force
+    $spokeTenantId = ConvertTo-SecureString "$SvpTenantId" -AsPlainText -Force
 
     Write-Host "New Service Principal Created!" -ForegroundColor Black -BackgroundColor Green
 }
@@ -117,25 +181,48 @@ elseif ($null -ne $AzSvpExistsOutput)
     $AzSvpExistsOutput = $null
     $AzSvpExistsOutput=$(Get-AzADServicePrincipal -DisplayName $ServicePrincipalName)
 
-    $spokeSvpClientSecret=$(Get-AzADServicePrincipal -DisplayName $ServicePrincipalName | New-AzADSpCredential | Select-Object -ExpandProperty SecretText)
     Write-Host "Service Principal exists, fetching output and generating new secret" -ForegroundColor Black -BackgroundColor Green ; `
 
     $spokeSvpClientId = $null
-    $spokeSvpClientSecret = $null
     $spokeSvpId = $null
     $spokeTenantId = $null
 
-    $spokeSvpClientId = $AzSvpExistsOutput | Select-Object -ExpandProperty appId
-    $spokeSvpClientSecret = New-AzADSpCredential -ServicePrincipalName ${spokeSvpclientId} | Select-Object -ExpandProperty SecretText
-    $spokeSvpId = $AzSvpExistsOutput | Select-Object -ExpandProperty id
-    $spokeTenantId = $AzSvpExistsOutput | Select-Object -ExpandProperty AppOwnerOrganizationId
+    $SvpClientId = $null
+    $SvpId = $null
+    $SvpTenantId = $null
+
+    $SvpClientId = $AzSvpExistsOutput | Select-Object -ExpandProperty AppId
+    $SvpClientSecret = $AzSvpExistsOutput | New-AzADSpCredential | Select-Object -ExpandProperty SecretText
+    $SvpId = $AzSvpExistsOutput | Select-Object -ExpandProperty Id
+    $SvpTenantId = $AzSvpExistsOutput | Select-Object -ExpandProperty AppOwnerOrganizationId
+
+    $spokeSvpClientId = ConvertTo-SecureString "$SvpClientId" -AsPlainText -Force
+    $spokeSvpClientSecret = ConvertTo-SecureString "$SvpClientSecret" -AsPlainText -Force
+    $spokeSvpId = ConvertTo-SecureString "$SvpId" -AsPlainText -Force
+    $spokeTenantId = ConvertTo-SecureString "$SvpTenantId" -AsPlainText -Force
 
     Write-Host "Existing Service Principal updated!" -ForegroundColor Black -BackgroundColor Green
 }
-if (-not (Get-Command New-AzUserAssignedIdentity))
-{
-   Write-Host  "New-AzUserAssignedIdentity doesn't exist, please install it to have this script run correct via pwsh -Command Set-PSRepository -Name PSGallery -InstallationPolicy Trusted  ; pwsh -Command Install-Module -Name Az -Force -AllowClobber -Scope AllUsers -Repository PSGallery ;  Install-Module -Name Az.ManagedServiceIdentity -AllowClobber as admin"  -ForegroundColor Black -BackgroundColor Red ; exit 1
-}
+
+Set-AzKeyVaultSecret `
+-VaultName $KeyvaultName `
+-Name "SpokeSvpClientId" `
+-SecretValue $spokeSvpClientId
+
+Set-AzKeyVaultSecret `
+-VaultName $KeyvaultName `
+-Name "SpokeSvpObjectId" `
+-SecretValue $spokeSvpId
+
+Set-AzKeyVaultSecret `
+-VaultName $KeyvaultName `
+-Name "SpokeSvpClientSecret" `
+-SecretValue $spokeSvpClientSecret
+
+Set-AzKeyVaultSecret `
+-VaultName $KeyvaultName `
+-Name "SpokeTenantId" `
+-SecretValue $spokeTenantId
 
 if (-not (Get-AzUserAssignedIdentity -ResourceGroup $ResourceGroupName -Name $ManagedIdentityName))
 {
@@ -149,14 +236,14 @@ if (-not (Get-AzUserAssignedIdentity -ResourceGroup $ResourceGroupName -Name $Ma
     $spokeManagedIdentityClientId = $null
     $spokeManagedIdentityPrincipalId = $null
 
-    $spokeManagedIdentityId=$($AzManagedIdOutput | Select-Object -ExpandProperty Id)
-    $spokeManagedIdentityClientId=$($AzManagedIdOutput | Select-Object -ExpandProperty ClientId)
+    $SpokeMiId=$($AzManagedIdOutput | Select-Object -ExpandProperty Id)
+    $SpokeMiClientId=$(Get-AzUserAssignedIdentity -ResourceGroup $ResourceGroupName -Name $ManagedIdentityName | Select-Object -ExpandProperty ClientId)
     $spokeManagedIdentityPrincipalId=$($AzManagedIdOutput | Select-Object -ExpandProperty PrincipalId)
 
     Set-AzKeyVaultAccessPolicy `
     -VaultName $KeyvaultName `
     -ResourceGroupName $ResourceGroupName `
-    -ServicePrincipalName $spokeManagedIdentityClientId `
+    -ServicePrincipalName $SpokeMiClientId `
     -PermissionsToSecrets get,list,set,recover,backup,restore `
     -PermissionsToCertificates get,list,update,create,import,delete,recover,backup,restore `
     -PermissionsToKeys get,list,update,create,import,delete,recover,backup,restore,decrypt,encrypt,verify,sign
@@ -173,19 +260,25 @@ else
     $spokeManagedIdentityClientId = $null
     $spokeManagedIdentityPrincipalId = $null
 
-    $spokeManagedIdentityId=$($AzManagedIdOutput | Select-Object -ExpandProperty Id)
-    $spokeManagedIdentityClientId=$($AzManagedIdOutput | Select-Object -ExpandProperty ClientId)
+    $SpokeMiId=$($AzManagedIdOutput | Select-Object -ExpandProperty Id)
+    $SpokeMiClientId=$(Get-AzUserAssignedIdentity -ResourceGroup $ResourceGroupName -Name $ManagedIdentityName | Select-Object -ExpandProperty ClientId)
     $spokeManagedIdentityPrincipalId=$($AzManagedIdOutput | Select-Object -ExpandProperty PrincipalId)
 
     Set-AzKeyVaultAccessPolicy `
     -VaultName $KeyvaultName `
     -ResourceGroupName $ResourceGroupName `
-    -ServicePrincipalName $spokeManagedIdentityClientId `
+    -ServicePrincipalName $SpokeMiClientId `
     -PermissionsToSecrets get,list,set,recover,backup,restore `
     -PermissionsToCertificates get,list,update,create,import,delete,recover,backup,restore `
     -PermissionsToKeys get,list,update,create,import,delete,recover,backup,restore,decrypt,encrypt,verify,sign
 }
 
+$spokeManagedIdentityClientId = ConvertTo-SecureString "$SpokeMiClientId" -AsPlainText -Force
+
+Set-AzKeyVaultSecret `
+-VaultName $KeyvaultName `
+-Name "SpokeManagedIdentityClientId" `
+-SecretValue $spokeManagedIdentityClientId
 
 Write-Host "Managed Identity Created! and given rights to keyvault and subscription!" -ForegroundColor Black -BackgroundColor Green
 
@@ -228,3 +321,129 @@ else
 {
     Write-Host "SSH Keygen does not exist, skipping SSH key generation" -ForegroundColor Black -BackgroundColor Yellow
 }
+
+# Creates storage account and blob container for terraform
+
+if (-not (Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName))
+{
+
+    Write-Host "Storage account doesn't exist, creating it" -ForegroundColor Black -BackgroundColor Yellow
+    $StorageAccountOutput = $null
+
+    $StorageAccountOutput=$(New-AzStorageAccount `
+    -ResourceGroupName $ResourceGroupName `
+    -AccountName $StorageAccountName `
+    -Location $LonghandLocation `
+    -SkuName "Standard_LRS" `
+    -AccessTier "Hot")
+
+    if (-not($StorageAccountOutput | Get-AzStorageContainer -Name $BlobContainerName))
+    {
+        Write-Host "Storage Container doesn't exist" -ForegroundColor Black -BackgroundColor Yellow
+
+        $BlobContainerOutput = $null
+        $BlobContainerOutput=$($StorageAccountOutput | New-AzStorageContainer -Name $BlobContainerName -Permission "off")
+    }
+    elseif ($StorageAccountOutput | Get-AzStorageContainer -Name $BlobContainerName)
+    {
+        Write-Host "Storage Container Created!" -ForegroundColor Black -BackgroundColor Green
+
+        $BlobContainerOutput = $null
+        $BlobContainerOutput=$($StorageAccountOutput | Get-AzStorageContainer -Name $BlobContainerName)
+    }
+
+    Write-Host "New Storage Account and Blob Created" -ForegroundColor Black -BackgroundColor Green
+}
+else
+{
+     Write-Host "Storage Account already exists" -ForegroundColor Black -BackgroundColor Yellow
+     $StorageAccountOutput = $null
+     $StorageAccountOutput=$(Get-AzStorageAccount `
+     -ResourceGroupName $ResourceGroupName `
+     -Name $StorageAccountName)
+
+    if (-not($StorageAccountOutput | Get-AzStorageContainer -Name $BlobContainerName))
+    {
+        Write-Host "Storage Container doesn't exist" -ForegroundColor Black -BackgroundColor Yellow
+
+        $BlobContainerOutput = $null
+        $BlobContainerOutput=$($StorageAccountOutput | New-AzStorageContainer -Name $BlobContainerName -Permission "off")
+    }
+    elseif ($StorageAccountOutput | Get-AzStorageContainer -Name $BlobContainerName)
+    {
+        Write-Host "Storage Container already exists" -ForegroundColor Black -BackgroundColor Yellow
+
+        $BlobContainerOutput = $null
+        $BlobContainerOutput=$($StorageAccountOutput | Get-AzStorageContainer -Name $BlobContainerName)
+    }
+     Write-Host "New Storage Account and Blob setup correctly!" -ForegroundColor Black -BackgroundColor Green
+}
+
+$SaRgName=$($StorageAccountOutput | Select-Object -ExpandProperty ResourceGroupName)
+$StorageKey1=$(Get-AzStorageAccountKey -ResourceGroupName $ResourceGroupName -AccountName $StorageAccountName | Select-Object -ExpandProperty Value | Select-Object -First 1)
+$StorageKey2=$(Get-AzStorageAccountKey -ResourceGroupName $ResourceGroupName -AccountName $StorageAccountName | Select-Object -ExpandProperty Value | Select-Object -Last 1)
+
+$spokeSaId=$($StorageAccountOutput | Select-Object -ExpandProperty Id)
+$spokeSaRgName = ConvertTo-SecureString "$SaRgName" -AsPlainText -Force
+$spokeSaName = ConvertTo-SecureString "$StorageAccountName" -AsPlainText -Force
+$spokeSaPrimaryKey = ConvertTo-SecureString "$StorageKey1" -AsPlainText -Force
+$spokeSaSecondarykey = ConvertTo-SecureString "$StorageKey2" -AsPlainText -Force
+
+Set-AzKeyVaultSecret `
+-VaultName $KeyvaultName `
+-Name "SpokeSaRgName" `
+-SecretValue $spokeSaRgName
+
+Set-AzKeyVaultSecret `
+-VaultName $KeyvaultName `
+-Name "SpokeSaName" `
+-SecretValue $spokeSaName
+
+$KeyExpiryDate = (Get-Date).AddMonths(3).ToUniversalTime()
+Set-AzKeyVaultSecret `
+-VaultName $KeyvaultName `
+-Name "SpokeSaPrimaryKey" `
+-SecretValue $spokeSaPrimaryKey `
+-Expires $KeyExpiryDate
+
+Set-AzKeyVaultSecret `
+-VaultName $KeyvaultName `
+-Name "SpokeSaSecondaryKey" `
+-SecretValue $spokeSaSecondarykey
+
+ Write-Host "Various Keyvault secrets have been set!" -ForegroundColor Black -BackgroundColor Green
+
+# This value is set and managed by Azure, do not change
+$AzureKeyvaultObjectId = "cfa8b339-82a2-471a-a3c9-0fc0be7a4093"
+
+if (-not(Get-AzRoleAssignment -ObjectId $AzureKeyvaultObjectId -RoleDefinitionName "Storage Account Key Operator Service Role"))
+{
+     Write-Host "Managed Keyvault Assignment already exists, skipping" -ForegroundColor Black -BackgroundColor Yellow
+
+}
+else
+{
+    # Sets up Keyvault to managed regen of Storage key1 every 90 days
+    New-AzRoleAssignment `
+    -ApplicationId $AzureKeyvaultObjectId `
+    -RoleDefinitionName "Storage Account Key Operator Service Role" `
+    -Scope $spokeSaId
+
+    Write-Host "Managed keyvault role created!, sleeping for 30 seconds to allow API to catchup" -ForegroundColor Black -BackgroundColor Green ; Start-Sleep -Seconds 30
+}
+
+Set-AzKeyVaultAccessPolicy `
+-VaultName $KeyvaultName `
+-UserPrincipalName $signedInUserUpn `
+-PermissionsToStorage get, list, delete, set, update, regeneratekey, getsas, listsas, deletesas, setsas, recover, backup, restore, purge
+
+$RegenerationPeriod = [System.Timespan]::FromDays(90)
+
+Add-AzKeyVaultManagedStorageAccount `
+-VaultName $keyVaultName `
+-AccountName $StorageAccountName `
+-AccountResourceId $spokeSaId `
+-ActiveKeyName "key1" `
+-RegenerationPeriod $RegenerationPeriod
+
+ Write-Host "Storage Account is now being managed by keyvault" -ForegroundColor Black -BackgroundColor Green
