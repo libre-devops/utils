@@ -14,7 +14,7 @@ Set-StrictMode -Version Latest
 
 $SubscriptionId = "libredevops-sub"
 $ShorthandName  = "exm"
-$ShorthandEnv   = "uat"
+$ShorthandEnv   = "crg4"
 $ShorthandLocation = "uks"
 
 ########## Do not edit anything below unless you know what you are doing ############
@@ -123,7 +123,6 @@ elseif ($null -ne $KeyvaultExists)
     Write-Host "Keyvault already exists, fetching info" -ForegroundColor Black -BackgroundColor Yellow
 }
 
-
 $KvOutput=$(Get-AzKeyvault -VaultName $KeyvaultName)
 
 $spokeKvId=$($KvOutput | Select-Object -ExpandProperty ResourceId)
@@ -142,6 +141,8 @@ Set-AzKeyVaultSecret `
 Write-Host "Keyvault Setup Complete" -ForegroundColor Black -BackgroundColor Green
 
 Write-Host "Creating new service principal now, be advised, this script will generate a new client secret if the service principal exists, you have 5 seconds to cancel the script now." -ForegroundColor Black -BackgroundColor Yellow ; Start-Sleep -Seconds 5
+
+$SubId=$(Get-AzSubscription -SubscriptionName $SubscriptionId | Select-Object -ExpandProperty SubscriptionId)
 
 $AzSvpExistsOutput = $(Get-AzADServicePrincipal `
 -DisplayName $ServicePrincipalName)
@@ -224,13 +225,35 @@ Set-AzKeyVaultSecret `
 -Name "SpokeTenantId" `
 -SecretValue $spokeTenantId
 
-if (-not (Get-AzUserAssignedIdentity -ResourceGroup $ResourceGroupName -Name $ManagedIdentityName))
+$SvpRoleAssignmentExists=$(Get-AzRoleAssignment -Scope "/subscriptions/${SubId}" | Where-Object {$_.RoleDefinitionName -eq 'Owner'}  | Select-Object -Property DisplayName | Where-Object {$_.DisplayName -eq $ServicePrincipalName})
+
+if ($null -ne $SvpRoleAssignmentExists)
+{
+     Write-Host "Service Principal Owner Role exists, skipping" -ForegroundColor Black -BackgroundColor Yellow
+
+}
+elseif ($null -eq $SvpRoleAssignmentExists)
+{
+    Write-Host "Managed Identity Owner Role does not exist, creating now" -ForegroundColor Black -BackgroundColor Yellow
+
+    New-AzRoleAssignment `
+    -ApplicationId $SvpClientId `
+    -RoleDefinitionName "Owner" `
+    -Scope "/subscriptions/${SubId}"
+
+    Write-Host "Owner Role Assigned to Svp" -ForegroundColor Black -BackgroundColor Green
+}
+
+
+if (-not (Get-AzUserAssignedIdentity -ResourceGroup $ResourceGroupName -Name $ManagedIdentityName -ErrorAction SilentlyContinue))
 {
     Write-Host "Managed Identity does not exist, creating it" -ForegroundColor Black -BackgroundColor Yellow
     $AzManagedIdOutput = $null
     $AzManagedIdOutput=$(New-AzUserAssignedIdentity `
     -ResourceGroupName $ResourceGroupName `
     -Name $ManagedIdentityName)
+
+    Write-Host "Managed Identity Created, Sleeping 20s while we await API catching up" -ForegroundColor Black -BackgroundColor Yellow ; Start-Sleep -Seconds 20
 
     $spokeManagedIdentityId = $null
     $spokeManagedIdentityClientId = $null
@@ -282,6 +305,25 @@ Set-AzKeyVaultSecret `
 
 Write-Host "Managed Identity Created! and given rights to keyvault and subscription!" -ForegroundColor Black -BackgroundColor Green
 
+$MiRoleAssignmentExists=$(Get-AzRoleAssignment -Scope "/subscriptions/$SubId" | Where-Object {$_.RoleDefinitionName -eq 'Owner' | Select-Object -Property DisplayName | Where-Object {$_.DisplayName -eq $ManagedIdentityName}})
+
+if ($null -ne $MiRoleAssignmentExists)
+{
+     Write-Host "Managed Identity Owner Role exists already, skipping" -ForegroundColor Black -BackgroundColor Yellow
+
+}
+elseif ($null -eq $MiRoleAssignmentExists)
+{
+    Write-Host "Managed Identity Owner Role does not exist, creating now" -ForegroundColor Black -BackgroundColor Yellow
+
+    New-AzRoleAssignment `
+    -ApplicationId $SpokeMiClientId `
+    -RoleDefinitionName "Owner" `
+    -Scope "/subscriptions/$SubId"
+
+    Write-Host "Managed Identity Role Assignment Done!" -ForegroundColor Black -BackgroundColor Green
+}
+
 $PasswordGenerator=$(-join (((48..57)+(65..90)+(97..122)) * 80 | Get-Random -Count 25 | ForEach-Object{[char]$_}))
 $spokeAdminSecret = ConvertTo-SecureString "$PasswordGenerator" -AsPlainText -Force
 
@@ -324,7 +366,7 @@ else
 
 # Creates storage account and blob container for terraform
 
-if (-not (Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName))
+if (-not (Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $StorageAccountName -ErrorAction SilentlyContinue))
 {
 
     Write-Host "Storage account doesn't exist, creating it" -ForegroundColor Black -BackgroundColor Yellow
@@ -337,7 +379,7 @@ if (-not (Get-AzStorageAccount -ResourceGroupName $ResourceGroupName -Name $Stor
     -SkuName "Standard_LRS" `
     -AccessTier "Hot")
 
-    if (-not($StorageAccountOutput | Get-AzStorageContainer -Name $BlobContainerName))
+    if (-not($StorageAccountOutput | Get-AzStorageContainer -Name $BlobContainerName -ErrorAction SilentlyContinue))
     {
         Write-Host "Storage Container doesn't exist" -ForegroundColor Black -BackgroundColor Yellow
 
@@ -415,14 +457,17 @@ Set-AzKeyVaultSecret `
 
 # This value is set and managed by Azure, do not change
 $AzureKeyvaultObjectId = "cfa8b339-82a2-471a-a3c9-0fc0be7a4093"
+$SaRoleAssignmentExists=$(Get-AzRoleAssignment -Scope $spokeSaId | Where-Object {$_.RoleDefinitionName -eq 'Storage Account Key Operator Service Role'} )
 
-if (-not(Get-AzRoleAssignment -ObjectId $AzureKeyvaultObjectId -RoleDefinitionName "Storage Account Key Operator Service Role"))
+if ($null -ne $SaRoleAssignmentExists)
 {
      Write-Host "Managed Keyvault Assignment already exists, skipping" -ForegroundColor Black -BackgroundColor Yellow
 
 }
-else
+elseif ($null -eq $SaRoleAssignmentExists)
 {
+    Write-Host "Managed Keyvault Assignment does not exist, creating now" -ForegroundColor Black -BackgroundColor Yellow
+
     # Sets up Keyvault to managed regen of Storage key1 every 90 days
     New-AzRoleAssignment `
     -ApplicationId $AzureKeyvaultObjectId `
@@ -430,6 +475,7 @@ else
     -Scope $spokeSaId
 
     Write-Host "Managed keyvault role created!, sleeping for 30 seconds to allow API to catchup" -ForegroundColor Black -BackgroundColor Green ; Start-Sleep -Seconds 30
+
 }
 
 Set-AzKeyVaultAccessPolicy `

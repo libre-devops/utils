@@ -3,14 +3,21 @@
 ########### Edit the below variables to use script ############
 
 SUBSCRIPTION_ID="libredevops-sub"
-SHORTHAND_NAME="lbdo"
-SHORTHAND_ENV="tst"
-SHORTHAND_LOCATION="euw"
-LONGHAND_LOCATION="westeurope"
+SHORTHAND_NAME="exm"
+SHORTHAND_ENV="crg5"
+SHORTHAND_LOCATION="uks"
 
 ########## Do not edit anything below unless you know what you are doing ############
 
 set -xeuo pipefail
+
+if [ "${SHORTHAND_LOCATION}" == "uks" ]; then
+
+    LONGHAND_LOCATION="uksouth"
+
+elif [ "${SHORTHAND_LOCATION}" == "euw" ]; then
+    LONGHAND_LOCATION="uksouth"
+fi
 
 print_success() {
     lightcyan='\033[1;36m'
@@ -62,6 +69,47 @@ titleConvertedShorthandLocation="$(title_case_convert $SHORTHAND_LOCATION)"
 
 #Without this, you have a chicken and an egg scenario, you need a storage account for terraform, you need an ARM template for ARM, or you can create in portal and terraform import, I prefer just using Azure-CLI and "one and done" it
 print_alert "This script is intended to be ran in the Cloud Shell in Azure to setup your pre-requisite items in a fresh tenant" && sleep 3s && \
+
+#Checks if Azure-CLI is installed
+if [[ ! $(command -v az) ]] ;
+
+then
+    print_error "You must install Azure CLI to use this script" && clean_on_exit && exit 1
+
+else
+    print_success "Azure-CLI is installed!, continuing" && sleep 2s
+
+fi
+
+#Checks if OpenSSL
+if [[ ! $(command -v openssl) ]] ;
+
+then
+    print_error "You must install OpenSSL to use this script" && clean_on_exit && exit 1
+
+else
+    print_success "OpenSSL is installed!, continuing" && sleep 2s
+
+fi
+
+#Checks if jq is installed
+if [[ ! $(command -v jq) ]] ;
+
+then
+    print_error "You must install jq to use this script" && clean_on_exit && exit 1
+
+else
+    print_success "jq is installed!, continuing" && sleep 2s
+
+fi
+
+if [ "$(az account show)" ]; then
+
+      print_success "You are logged in!, continuing"
+else
+      print_error "You need to logged in to run this script"  && clean_on_exit && exit 1
+fi
+
 az config set extension.use_dynamic_install=yes_without_prompt
 az account set --subscription "${SUBSCRIPTION_ID}" && \
 
