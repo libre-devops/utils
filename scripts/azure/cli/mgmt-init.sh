@@ -42,11 +42,11 @@ title_case_convert() {
 }
 
 upper_case_convert() {
-  sed -e 's/\(.*\)/\L\1/' <<< "$1"
+    sed -e 's/\(.*\)/\L\1/' <<< "$1"
 }
 
 lower_case_convert() {
-  sed -e 's/\(.*\)/\L\1/' <<< "$1"
+    sed -e 's/\(.*\)/\L\1/' <<< "$1"
 }
 
 clean_on_exit() {
@@ -70,7 +70,7 @@ titleConvertedShorthandLocation="$(title_case_convert $SHORTHAND_LOCATION)"
 #Without this, you have a chicken and an egg scenario, you need a storage account for terraform, you need an ARM template for ARM, or you can create in portal and terraform import, I prefer just using Azure-CLI and "one and done" it
 print_alert "This script is intended to be ran in the Cloud Shell in Azure to setup your pre-requisite items in a fresh tenant" && sleep 3s && \
 
-#Checks if Azure-CLI is installed
+    #Checks if Azure-CLI is installed
 if [[ ! $(command -v az) ]] ;
 
 then
@@ -105,22 +105,22 @@ fi
 
 if [ "$(az account show)" ]; then
 
-      print_success "You are logged in!, continuing"
+    print_success "You are logged in!, continuing"
 else
-      print_error "You need to logged in to run this script"  && clean_on_exit && exit 1
+    print_error "You need to logged in to run this script"  && clean_on_exit && exit 1
 fi
 
 az config set extension.use_dynamic_install=yes_without_prompt
 az account set --subscription "${SUBSCRIPTION_ID}" && \
 
-spokeSubId=$(az account show --query id -o tsv)
+    spokeSubId=$(az account show --query id -o tsv)
 spokeSubName=$(az account show --query name -o tsv)
 
-    #Create Management Resource group and export its values
+#Create Management Resource group and export its values
 if
 
 signedInUserUpn=$(az ad signed-in-user show \
---query "userPrincipalName" -o tsv)
+    --query "userPrincipalName" -o tsv)
 
 az group create \
     --name "rg-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt" \
@@ -174,38 +174,38 @@ az ad sp create-for-rbac \
     --scopes "/subscriptions/${spokeSubId}" > spoke_svp.json && \
     spokeSvpClientId=$(jq -r ".appId" spoke_svp.json) && \
     spokeSvpClientSecret=$(jq -r ".password" spoke_svp.json)
-    spokeSvpTenantId=$(jq -r ".tenant" spoke_svp.json)
+spokeSvpTenantId=$(jq -r ".tenant" spoke_svp.json)
 
 spokeSvpObjectId=$(az ad sp show \
         --id "${spokeSvpClientId}" \
     --query "objectId" -o tsv)
 
-  az keyvault secret set \
+az keyvault secret set \
     --vault-name "${spokeKvName}" \
     --name "SpokeSubId" \
     --value "${spokeSubId}"
 
-  az keyvault secret set \
+az keyvault secret set \
     --vault-name "${spokeKvName}" \
     --name "SpokeSvpClientId" \
     --value "${spokeSvpClientId}"
 
-  az keyvault secret set \
+az keyvault secret set \
     --vault-name "${spokeKvName}" \
     --name "SpokeSvpObjectId" \
     --value "${spokeSvpObjectId}"
 
-  az keyvault secret set \
+az keyvault secret set \
     --vault-name "${spokeKvName}" \
     --name "SpokeSvpClientSecret" \
     --value "${spokeSvpClientSecret}"
 
-  az keyvault secret set \
+az keyvault secret set \
     --vault-name "${spokeKvName}" \
     --name "SpokeTenantId" \
     --value "${spokeSvpTenantId}"
 
-  az keyvault secret set \
+az keyvault secret set \
     --vault-name "${spokeKvName}" \
     --name "SpokeKvName" \
     --value "${spokeKvName}"
@@ -219,57 +219,57 @@ else
 fi
 
 if
- az identity create \
- --name "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
- --resource-group "${spokeMgmtRgName}" \
- --location "${LONGHAND_LOCATION}" \
- --subscription "${SUBSCRIPTION_ID}"
+az identity create \
+    --name "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
+    --resource-group "${spokeMgmtRgName}" \
+    --location "${LONGHAND_LOCATION}" \
+    --subscription "${SUBSCRIPTION_ID}"
 
- spokeManagedIdentityId=$(az identity show \
- --name "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
- --resource-group "${spokeMgmtRgName}" \
- --subscription "${SUBSCRIPTION_ID}" \
+spokeManagedIdentityId=$(az identity show \
+        --name "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
+        --resource-group "${spokeMgmtRgName}" \
+        --subscription "${SUBSCRIPTION_ID}" \
     --query "id" -o tsv)
 
-  spokeManagedIdentityClientId=$(az identity show \
- --name "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
- --resource-group "${spokeMgmtRgName}" \
- --subscription "${SUBSCRIPTION_ID}" \
+spokeManagedIdentityClientId=$(az identity show \
+        --name "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
+        --resource-group "${spokeMgmtRgName}" \
+        --subscription "${SUBSCRIPTION_ID}" \
     --query "clientId" -o tsv)
 
- spokeManagedIdentityPrincipalId=$(az identity show \
- --name "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
- --resource-group "${spokeMgmtRgName}" \
- --subscription "${SUBSCRIPTION_ID}" \
+spokeManagedIdentityPrincipalId=$(az identity show \
+        --name "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
+        --resource-group "${spokeMgmtRgName}" \
+        --subscription "${SUBSCRIPTION_ID}" \
     --query "principalId" -o tsv)
 
-  spokeManagedIdentityTenantId=$(az identity show \
- --name "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
- --resource-group "${spokeMgmtRgName}" \
- --subscription "${SUBSCRIPTION_ID}" \
+spokeManagedIdentityTenantId=$(az identity show \
+        --name "id-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-mgt-01" \
+        --resource-group "${spokeMgmtRgName}" \
+        --subscription "${SUBSCRIPTION_ID}" \
     --query "tenantId" -o tsv)
 
-  az keyvault secret set \
+az keyvault secret set \
     --vault-name "${spokeKvName}" \
     --name "SpokeManagedIdentityClientId" \
     --value "${spokeManagedIdentityClientId}"
 
-  export MSYS_NO_PATHCONV=1
+export MSYS_NO_PATHCONV=1
 
-  az role assignment create \
-  --role "Owner" \
-  --assignee "${spokeManagedIdentityClientId}" \
-  --scope "/subscriptions/${spokeSubId}"
+az role assignment create \
+    --role "Owner" \
+    --assignee "${spokeManagedIdentityClientId}" \
+    --scope "/subscriptions/${spokeSubId}"
 
-  az keyvault set-policy \
-  --name "${spokeKvName}" \
-  --subscription "${spokeSubId}" \
-  --object-id "${spokeManagedIdentityPrincipalId}" \
-  --secret-permissions get list set delete recover backup restore \
-  --certificate-permissions get list update create import delete recover backup restore \
-  --key-permissions get list update create import delete recover backup restore decrypt encrypt verify sign
+az keyvault set-policy \
+    --name "${spokeKvName}" \
+    --subscription "${spokeSubId}" \
+    --object-id "${spokeManagedIdentityPrincipalId}" \
+    --secret-permissions get list set delete recover backup restore \
+    --certificate-permissions get list update create import delete recover backup restore \
+    --key-permissions get list update create import delete recover backup restore decrypt encrypt verify sign
 
-  unset MSYS_NO_PATHCONV
+unset MSYS_NO_PATHCONV
 
 
 then
@@ -339,54 +339,54 @@ az storage account create \
     --resource-group "${spokeMgmtRgName}" \
     --name "blob${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}tfm01"
 
-  spokeSaId=$(az storage account show \
+spokeSaId=$(az storage account show \
         --name "sa${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}mgt01" \
         --resource-group "${spokeMgmtRgName}" \
         --subscription "${SUBSCRIPTION_ID}" \
     --query "id" -o tsv)
 
-  spokeSaName=$(az storage account show \
-      --name "sa${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}mgt01" \
-      --resource-group "${spokeMgmtRgName}" \
-      --subscription "${SUBSCRIPTION_ID}" \
-  --query "name" -o tsv)
+spokeSaName=$(az storage account show \
+        --name "sa${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}mgt01" \
+        --resource-group "${spokeMgmtRgName}" \
+        --subscription "${SUBSCRIPTION_ID}" \
+    --query "name" -o tsv)
 
-  spokeSaPrimaryKey=$(az storage account keys list \
-  --resource-group "${spokeMgmtRgName}" \
-  --account-name "${spokeSaName}" \
-  --query "[0].value" -o tsv)
+spokeSaPrimaryKey=$(az storage account keys list \
+        --resource-group "${spokeMgmtRgName}" \
+        --account-name "${spokeSaName}" \
+    --query "[0].value" -o tsv)
 
-  spokeSaSecondaryKey=$(az storage account keys list \
-  --resource-group "${spokeMgmtRgName}" \
-  --account-name "${spokeSaName}" \
-  --query "[1].value" -o tsv)
+spokeSaSecondaryKey=$(az storage account keys list \
+        --resource-group "${spokeMgmtRgName}" \
+        --account-name "${spokeSaName}" \
+    --query "[1].value" -o tsv)
 
- az keyvault secret set \
-  --vault-name "${spokeKvName}" \
-  --name "SpokeSaRgName" \
-  --value "${spokeMgmtRgName}"
+az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSaRgName" \
+    --value "${spokeMgmtRgName}"
 
-  az keyvault secret set \
-  --vault-name "${spokeKvName}" \
-  --name "SpokeSaName" \
-  --value "${spokeSaName}"
+az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSaName" \
+    --value "${spokeSaName}"
 
-  az keyvault secret set \
-  --vault-name "${spokeKvName}" \
-  --name "SpokeSaBlobContainerName" \
-  --value "blob${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}tfm01"
+az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSaBlobContainerName" \
+    --value "blob${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}tfm01"
 
 expiryDate=$(date --iso-8601 -d "+90 days")
-  az keyvault secret set \
-  --vault-name "${spokeKvName}" \
-  --name "SpokeSaPrimaryKey" \
-  --value "${spokeSaPrimaryKey}" \
-  --expires "${expiryDate}"
+az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSaPrimaryKey" \
+    --value "${spokeSaPrimaryKey}" \
+    --expires "${expiryDate}"
 
-  az keyvault secret set \
-  --vault-name "${spokeKvName}" \
-  --name "SpokeSaSecondaryKey" \
-  --value "${spokeSaSecondaryKey}"
+az keyvault secret set \
+    --vault-name "${spokeKvName}" \
+    --name "SpokeSaSecondaryKey" \
+    --value "${spokeSaSecondaryKey}"
 
 then
     print_success "Storage account created" && sleep 2s
@@ -402,39 +402,39 @@ if
 export MSYS_NO_PATHCONV=1
 
 az role assignment create \
---role "Storage Account Key Operator Service Role" \
---assignee "https://vault.azure.net" \
---scope "${spokeSaId}"
+    --role "Storage Account Key Operator Service Role" \
+    --assignee "https://vault.azure.net" \
+    --scope "${spokeSaId}"
 
 az keyvault set-policy \
---name "${spokeKvName}" \
---upn "${signedInUserUpn}" \
---storage-permissions get list delete set update regeneratekey getsas listsas deletesas setsas recover backup restore purge
+    --name "${spokeKvName}" \
+    --upn "${signedInUserUpn}" \
+    --storage-permissions get list delete set update regeneratekey getsas listsas deletesas setsas recover backup restore purge
 
 az keyvault set-policy \
---name "${spokeKvName}" \
---subscription "${spokeSubId}" \
---object-id "${spokeSvpObjectId}" \
---secret-permissions get list set delete recover backup restore purge \
---certificate-permissions get list update create import delete recover backup restore purge \
---key-permissions get list update create import delete recover backup restore decrypt encrypt verify sign purge
+    --name "${spokeKvName}" \
+    --subscription "${spokeSubId}" \
+    --object-id "${spokeSvpObjectId}" \
+    --secret-permissions get list set delete recover backup restore purge \
+    --certificate-permissions get list update create import delete recover backup restore purge \
+    --key-permissions get list update create import delete recover backup restore decrypt encrypt verify sign purge
 
 az keyvault storage add \
---vault-name "${spokeKvName}" \
--n "${spokeSaName}" \
---active-key-name key1 \
---auto-regenerate-key \
---regeneration-period P90D \
---resource-id "${spokeSaId}"
+    --vault-name "${spokeKvName}" \
+    -n "${spokeSaName}" \
+    --active-key-name key1 \
+    --auto-regenerate-key \
+    --regeneration-period P90D \
+    --resource-id "${spokeSaId}"
 
 unset MSYS_NO_PATHCONV
 
 then
-  print_success "Storage account now being managed by keyvault" && sleep 2s
+    print_success "Storage account now being managed by keyvault" && sleep 2s
 
 else
 
-  print_error "Something has went wrong setting the storage account to be managed by keyvault  Error Code CLOUD06" && clean_on_exit && exit 1
+    print_error "Something has went wrong setting the storage account to be managed by keyvault  Error Code CLOUD06" && clean_on_exit && exit 1
 
 fi
 
