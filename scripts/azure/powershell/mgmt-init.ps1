@@ -244,7 +244,6 @@ elseif ($null -eq $SvpRoleAssignmentExists)
     Write-Host "Owner Role Assigned to Svp" -ForegroundColor Black -BackgroundColor Green
 }
 
-
 if (-not (Get-AzUserAssignedIdentity -ResourceGroup $ResourceGroupName -Name $ManagedIdentityName -ErrorAction SilentlyContinue))
 {
     Write-Host "Managed Identity does not exist, creating it" -ForegroundColor Black -BackgroundColor Yellow
