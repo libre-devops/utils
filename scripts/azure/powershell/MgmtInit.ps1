@@ -13,8 +13,8 @@ Set-StrictMode -Version Latest
 ########### Edit the below variables to use script ############
 
 $SubscriptionId = "libredevops-sub"
-$ShorthandName = "exm"
-$ShorthandEnv = "crg4"
+$ShorthandName = "ldo"
+$ShorthandEnv = "ppd3"
 $ShorthandLocation = "uks"
 
 ########## Do not edit anything below unless you know what you are doing ############
@@ -23,10 +23,29 @@ if ($ShorthandLocation = "uks")
 {
   $LonghandLocation = "uksouth"
 }
+elseif ($ShorthandLocation = "ukw")
+{
+  $LonghandLocation = "ukwest"
+}
 elseif ($ShorthandLocation = "euw")
 {
   $LonghandLocation = "westeurope"
 }
+elseif ($ShorthandLocation = "eun")
+{
+  $LonghandLocation = "northeurope"
+}
+elseif ($ShorthandLocation = "use")
+{
+  $LonghandLocation = "eastus"
+}
+elseif ($ShorthandLocation = "use2")
+{
+  $LonghandLocation = "eastus2"
+}
+
+# Set-PSDebug -Trace 1 // Basically the same as set -x in Bash
+
 
 $lowerConvertedShorthandName = $ShorthandName.ToLower()
 $lowerConvertedShorthandEnv = $ShorthandEnv.ToLower()
@@ -48,10 +67,9 @@ $ManagedIdentityName = "id-${lowerConvertedShorthandName}-${lowerConvertedShorth
 $PublicSshKeyName = "ssh-${lowerConvertedShorthandName}-${lowerConvertedShorthandLocation}-${lowerConvertedShorthandEnv}-pub-mgt"
 $PrivateSshKeyName = "Ssh${titleConvertedShorthandName}${titleConvertedShorthandLocation}${titleConvertedShorthandEnv}Key"
 $StorageAccountName = "sa${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}mgt01"
-$BlobContainerName = "blob${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}tfm01"
+$BlobContainerName = "blob${lowerConvertedShorthandName}${lowerConvertedShorthandLocation}${lowerConvertedShorthandEnv}mgt01"
 
 Write-Host "This script is intended to be ran in the Cloud Shell in Azure to setup your pre-requisite items in a fresh tenant, to setup management resources for terraform.  This is just an example!" -ForegroundColor Black -BackgroundColor Yellow; Start-Sleep -Seconds 3
-Write-Host "Please be aware, if you are running this script to update an existing service principal, it will give it a new secret, DO not run this script if you do not want this" -ForegroundColor Black -BackgroundColor DarkYellow
 
 $TestCommands = @(
   'Get-AzContext',
@@ -89,6 +107,15 @@ if ($null -eq $LoggedIn)
 elseif ($null -ne $LoggedIn)
 {
   Write-Host "Already logged in, continuing..." -ForegroundColor Black -BackgroundColor Green
+}
+
+if (-not ($ShorthandName.Length -le 5 -and $ShorthandName.Length -ge 1))
+{
+  Write-Host "You can't have a shorthand greater than 5, edit the variables and retry" -ForegroundColor Black -BackgroundColor Red; exit 1
+}
+else
+{
+  Write-Host "${lowerConvertedShorthandName} shorthand name is less than 5 and greater than 1, thus is permissible, continuing" -ForegroundColor Black -BackgroundColor Green
 }
 
 # Set subscription
@@ -252,7 +279,7 @@ if (-not (Get-AzUserAssignedIdentity -ResourceGroup $ResourceGroupName -Name $Ma
        -ResourceGroupName $ResourceGroupName `
        -Name $ManagedIdentityName)
 
-  Write-Host "Managed Identity Created, Sleeping 20s while we await API catching up" -ForegroundColor Black -BackgroundColor Yellow; Start-Sleep -Seconds 20
+  Write-Host "Managed Identity Created, Sleeping 30s while we await API catching up" -ForegroundColor Black -BackgroundColor Yellow; Start-Sleep -Seconds 30
 
   $spokeManagedIdentityId = $null
   $spokeManagedIdentityClientId = $null
@@ -266,7 +293,7 @@ if (-not (Get-AzUserAssignedIdentity -ResourceGroup $ResourceGroupName -Name $Ma
      -VaultName $KeyvaultName `
      -ResourceGroupName $ResourceGroupName `
      -ServicePrincipalName $SpokeMiClientId `
-     -PermissionsToSecrets get,list,Set-Variable,recover,backup,restore `
+     -PermissionsToSecrets get,list,set,recover,backup,restore `
      -PermissionsToCertificates get,list,update,create,import,delete,recover,backup,restore `
      -PermissionsToKeys get,list,update,create,import,delete,recover,backup,restore,decrypt,encrypt,verify,sign
 }
@@ -290,7 +317,7 @@ else
      -VaultName $KeyvaultName `
      -ResourceGroupName $ResourceGroupName `
      -ServicePrincipalName $SpokeMiClientId `
-     -PermissionsToSecrets get,list,Set-Variable,recover,backup,restore `
+     -PermissionsToSecrets get,list,set,recover,backup,restore `
      -PermissionsToCertificates get,list,update,create,import,delete,recover,backup,restore `
      -PermissionsToKeys get,list,update,create,import,delete,recover,backup,restore,decrypt,encrypt,verify,sign
 }
@@ -304,7 +331,7 @@ Set-AzKeyVaultSecret `
 
 Write-Host "Managed Identity Created! and given rights to keyvault and subscription!" -ForegroundColor Black -BackgroundColor Green
 
-$MiRoleAssignmentExists = $(Get-AzRoleAssignment -Scope "/subscriptions/$SubId" | Where-Object { $_.RoleDefinitionName -eq 'Owner' | Select-Object -Property DisplayName | Where-Object { $_.DisplayName -eq $ManagedIdentityName } })
+$MiRoleAssignmentExists = $(Get-AzRoleAssignment -Scope "/subscriptions/$SubId" | Where-Object { $_.RoleDefinitionName  -eq 'Owner' } | Select-Object -Property DisplayName | Where-Object { $_.DisplayName -eq $ManagedIdentityName})
 
 if ($null -ne $MiRoleAssignmentExists)
 {
@@ -456,7 +483,7 @@ Write-Host "Various Keyvault secrets have been set!" -ForegroundColor Black -Bac
 
 # This value is set and managed by Azure, do not change
 $AzureKeyvaultObjectId = "cfa8b339-82a2-471a-a3c9-0fc0be7a4093"
-$SaRoleAssignmentExists = $(Get-AzRoleAssignment -Scope $spokeSaId | Where-Object { $_.RoleDefinitionName -eq 'Storage Account Key Operator Service Role' })
+$SaRoleAssignmentExists = $(Get-AzRoleAssignment -Scope $spokeSaId | Where-Object { $_.RoleDefinitionName -eq 'Storage Account Key Operator Service Role'})
 
 if ($null -ne $SaRoleAssignmentExists)
 {
@@ -480,7 +507,7 @@ elseif ($null -eq $SaRoleAssignmentExists)
 Set-AzKeyVaultAccessPolicy `
    -VaultName $KeyvaultName `
    -UserPrincipalName $signedInUserUpn `
-   -PermissionsToStorage get,list,delete,Set-Variable,update,regeneratekey,getsas,listsas,deletesas,setsas,recover,backup,restore,purge
+   -PermissionsToStorage get,list,delete,set,update,regeneratekey,getsas,listsas,deletesas,setsas,recover,backup,restore,purge
 
 $RegenerationPeriod = [System.TimeSpan]::FromDays(90)
 
