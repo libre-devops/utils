@@ -4,8 +4,8 @@
 
 SUBSCRIPTION_ID="libredevops-sub"
 SHORTHAND_NAME="ldo"
-SHORTHAND_ENV="ppd4"
-SHORTHAND_LOCATION="uks"
+SHORTHAND_ENV="dev"
+SHORTHAND_LOCATION="euw"
 
 ########## Do not edit anything below unless you know what you are doing ############
 
