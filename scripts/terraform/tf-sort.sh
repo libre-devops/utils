@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # This script will sort your terraform variables in alphabetical order.
 # We took the main concept of this script from the author whom is still credited in the heredoc.
+# RUN AT YOUR OWN PERIL
 # Master copy at https://github.com/libre-devops/utils/blob/dev/scripts/terraform/tf-sort.sh
 # This script is set to take arguments, so you can run it like so from anywhere with bash, curl and awk:
-# curl
+# curl https://raw.githubusercontent.com/libre-devops/utils/dev/scripts/terraform/tf-sort.sh | bash -s input.tf sorted-input.tf
 set -xe
 
 tf_variables_file="${1:-input.tf}"
