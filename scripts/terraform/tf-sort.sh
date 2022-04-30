@@ -6,9 +6,9 @@
 #
 # Master copy at https://github.com/libre-devops/utils/blob/dev/scripts/terraform/tf-sort.sh
 #
-# This script is set to take arguments, so you can run it like so from anywhere with bash, curl or wget and awk:
+# This script fis set to take arguments, so you can run it like so from anywhere with bash, curl or wget and awk:
 #
-# curl https://raw.githubusercontent.com/libre-devops/utils/dev/scripts/terraform/tf-sort.sh | bash -s input.tf sorted-input.tf
+# curl https://raw.githubusercontent.com/libre-devops/utils/dev/scripts/terraform/tf-sort.sh | bash -s -- input.tf sorted-input.tf
 #
 # wget -O - https://raw.githubusercontent.com/libre-devops/utils/dev/scripts/terraform/tf-sort.sh | bash -s -- input.tf input.tf
 
