@@ -11,7 +11,8 @@
 # curl https://raw.githubusercontent.com/libre-devops/utils/dev/scripts/terraform/tf-sort.sh | bash -s -- input.tf sorted-input.tf
 #
 # wget -O - https://raw.githubusercontent.com/libre-devops/utils/dev/scripts/terraform/tf-sort.sh | bash -s -- input.tf input.tf
-
+#
+#Handy guide over at https://www.libredevops.org/quickstart/utils/scripts/linux/sort-terraform-variables.html
 
 set -euo pipefail
 
