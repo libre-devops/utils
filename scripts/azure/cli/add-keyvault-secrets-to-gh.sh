@@ -153,6 +153,11 @@ SpokeTenantId=$(az keyvault secret show \
 --vault-name "${spokeKvName}" \
 --query "value" -o tsv)
 
+SpokePulumiPassphrase=$(az keyvault secret show \
+--name "SpokePulumiPassphrase" \
+--vault-name "${spokeKvName}" \
+--query "value" -o tsv)
+
 SshKey=$(az keyvault secret show \
 --name "Ssh${titleConvertedShorthandName}${titleConvertedShorthandLocation}${titleConvertedShorthandEnv}Key" \
 --vault-name "${spokeKvName}" \
@@ -170,6 +175,7 @@ gh secret set SpokeSaSecondaryKey --body "${SpokeSaSecondaryKey}" --org ${GITHUB
 gh secret set SpokeSubId --body "${SpokeSubId}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
 gh secret set SpokeSvpClientId --body "${SpokeSvpClientId}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
 gh secret set SpokeSvpClientSecret --body "${SpokeSvpClientSecret}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
+gh secret set SpokePulumiPassphrase --body "${SpokePulumiPassphrase}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
 gh secret set SpokeSvpObjectId --body "${SpokeSvpObjectId}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
 gh secret set SpokeTenantId --body "${SpokeTenantId}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
 gh secret set SshKey --body "${SshKey}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
