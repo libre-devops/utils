@@ -7,7 +7,6 @@ SHORTHAND_NAME="ldo"
 SHORTHAND_ENV="dev"
 SHORTHAND_LOCATION="euw"
 GITHUB_ORG="libre-devops"
-GITHUB_REPO="azure-terraform-gh-action"
 
 print_success() {
     lightcyan='\033[1;36m'
@@ -160,17 +159,17 @@ SshKey=$(az keyvault secret show \
 
 print_alert "All secrets have been retrived successfully"
 
-gh secret set LocalAdminSecret --body "${LocalAdminSecret}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
-gh secret set SpokeManagedIdentityClientId --body "${SpokeManagedIdentityClientId}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
-gh secret set SpokeSaBlobContainerName --body "${SpokeSaBlobContainerName}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
-gh secret set SpokeSaName --body "${SpokeSaName}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
-gh secret set SpokeSaPrimaryKey --body "${SpokeSaPrimaryKey}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
-gh secret set SpokeSaRgName --body "${SpokeSaRgName}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
-gh secret set SpokeSaSecondaryKey --body "${SpokeSaSecondaryKey}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
-gh secret set SpokeSubId --body "${SpokeSubId}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
-gh secret set SpokeSvpClientId --body "${SpokeSvpClientId}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
-gh secret set SpokeSvpClientSecret --body "${SpokeSvpClientSecret}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
-gh secret set SpokeSvpObjectId --body "${SpokeSvpObjectId}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
-gh secret set SpokeTenantId --body "${SpokeTenantId}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
-gh secret set SshKey --body "${SshKey}" --org ${GITHUB_ORG} --repos ${GITHUB_REPO}
+gh secret set LocalAdminSecret --body "${LocalAdminSecret}" --org ${GITHUB_ORG}
+gh secret set SpokeManagedIdentityClientId --body "${SpokeManagedIdentityClientId}" --org ${GITHUB_ORG}
+gh secret set SpokeSaBlobContainerName --body "${SpokeSaBlobContainerName}" --org ${GITHUB_ORG}
+gh secret set SpokeSaName --body "${SpokeSaName}" --org ${GITHUB_ORG}
+gh secret set SpokeSaPrimaryKey --body "${SpokeSaPrimaryKey}" --org ${GITHUB_ORG}
+gh secret set SpokeSaRgName --body "${SpokeSaRgName}" --org ${GITHUB_ORG}
+gh secret set SpokeSaSecondaryKey --body "${SpokeSaSecondaryKey}" --org ${GITHUB_ORG}
+gh secret set SpokeSubId --body "${SpokeSubId}" --org ${GITHUB_ORG}
+gh secret set SpokeSvpClientId --body "${SpokeSvpClientId}" --org ${GITHUB_ORG}
+gh secret set SpokeSvpClientSecret --body "${SpokeSvpClientSecret}" --org ${GITHUB_ORG}
+gh secret set SpokeSvpObjectId --body "${SpokeSvpObjectId}" --org ${GITHUB_ORG}
+gh secret set SpokeTenantId --body "${SpokeTenantId}" --org ${GITHUB_ORG}
+gh secret set SshKey --body "${SshKey}" --org ${GITHUB_ORG}
 
