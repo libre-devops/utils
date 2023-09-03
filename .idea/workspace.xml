@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="c6168e06-52ea-46b9-9ce2-313145b40896" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../.libre-devops/terraform-azurerm-linux-vm/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../.libre-devops/terraform-azurerm-linux-vm/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../.libre-devops/terraform-azurerm-linux-vm/.idea/terraform-azurerm-linux-vm.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/.idea.utils.dir/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/.idea.utils.dir/.idea/encodings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/.idea.utils.dir/.idea/indexLayout.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/.idea.utils.dir/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/0-management-script/Management-Prep.ps1" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/1-graph-script-optional/Assign-GraphPermissions.ps1" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/azapi-provider.tf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/azpolicy-tag-policy-contact-tag.tf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/azpolicy-tag-policy-pattern.tf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/azuread-provider.tf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/azurecaf-provider.tf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/azurecaf.tf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/azuredevops-provider.tf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/azurerm-provider.tf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/data.tf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/input.tf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/locals.tf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/management-group.tf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/subscription.tf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/terraform.tf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.libre-devops/terraform-azurerm-linux-vm/.github/workflows/tf-plan.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../.libre-devops/terraform-azurerm-linux-vm/.github/workflows/tf-plan.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/azure/powershell/MgmtInit.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/azure/powershell/Management-Init.ps1" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.libre-devops/terraform-azurerm-linux-vm" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 2
+}]]></component>
+  <component name="ProjectId" id="2UrmJSSWpv0PZ1bOOjtlOiR4mS5" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/craig/craig-workspace/.libre-devops/terraform-azurerm-linux-vm",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\craig\craig-workspace\utils\terraform-tenant-setup" />
+      <recent name="C:\Users\craig\craig-workspace\utils\terraform-tenant-setup\2-terraform-build" />
+      <recent name="C:\Users\craig\craig-workspace\utils\terraform-tenant-setup\1-graph-script-optional" />
+      <recent name="C:\Users\craig\craig-workspace\utils\terraform-tenant-setup\0-management-script" />
+    </key>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="c6168e06-52ea-46b9-9ce2-313145b40896" name="Changes" comment="" />
+      <created>1693706001831</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1693706001831</updated>
+      <workItem from="1693706003102" duration="4920000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
