@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 terraform_run() {
+  rm -rf .terraform tfplan* .terraform.lock.hcl
 
     if command -v tfenv &> /dev/null && \
         command -v terraform &> /dev/null && \
