@@ -5,32 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="c6168e06-52ea-46b9-9ce2-313145b40896" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../.libre-devops/terraform-azurerm-linux-vm/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../.libre-devops/terraform-azurerm-linux-vm/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/../.libre-devops/terraform-azurerm-linux-vm/.idea/terraform-azurerm-linux-vm.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.utils.dir/.idea/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.utils.dir/.idea/encodings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.utils.dir/.idea/indexLayout.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.idea.utils.dir/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/0-management-script/Management-Prep.ps1" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/1-graph-script-optional/Assign-GraphPermissions.ps1" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/azapi-provider.tf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/azpolicy-tag-policy-contact-tag.tf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/azpolicy-tag-policy-pattern.tf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/azuread-provider.tf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/azurecaf-provider.tf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/azurecaf.tf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/azuredevops-provider.tf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/azurerm-provider.tf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/data.tf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/input.tf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/locals.tf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/management-group.tf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/subscription.tf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/2-terraform-build/terraform.tf" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/initial-tenant-setup/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.libre-devops/terraform-azurerm-linux-vm/.github/workflows/tf-plan.yml" beforeDir="false" afterPath="$PROJECT_DIR$/../.libre-devops/terraform-azurerm-linux-vm/.github/workflows/tf-plan.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/azure/powershell/MgmtInit.ps1" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/azure/powershell/Management-Init.ps1" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/terraform/local-build.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,14 +14,14 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.libre-devops/terraform-azurerm-linux-vm" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 2
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 2
+}</component>
   <component name="ProjectId" id="2UrmJSSWpv0PZ1bOOjtlOiR4mS5" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
@@ -57,9 +33,9 @@
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "WebServerToolWindowFactoryState": "false",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "dev",
     "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/Users/craig/craig-workspace/.libre-devops/terraform-azurerm-linux-vm",
+    "last_opened_file_path": "C:/Users/craig/craig-workspace/utils",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -86,6 +62,8 @@
       <option name="presentableId" value="Default" />
       <updated>1693706001831</updated>
       <workItem from="1693706003102" duration="4920000" />
+      <workItem from="1693780731695" duration="3347000" />
+      <workItem from="1693858401134" duration="1450000" />
     </task>
     <servers />
   </component>
