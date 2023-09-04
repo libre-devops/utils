@@ -1,8 +1,8 @@
 #!/usr/bin/env pwsh
 
-    [Diagnostics.CodeAnalysis.SuppressMessage("PSAvoidUsingInvokeExpression","")]
-    [CmdletBinding()]
-    [OutputType([System.Object[]])]
+[Diagnostics.CodeAnalysis.SuppressMessage("PSAvoidUsingInvokeExpression","")]
+[CmdletBinding()]
+[OutputType([System.Object[]])]
 param(
 
     [switch]$Help
@@ -354,7 +354,7 @@ elseif ($null -eq $MiRoleAssignmentExists)
     foreach ($role in $requiredRoles) {
         Write-Host "Managed Identity $role Role does not exist, creating now" -ForegroundColor Black -BackgroundColor Yellow
 
-        New-AzRoleAssignment `
+    New-AzRoleAssignment `
      -ApplicationId $SpokeMiClientId `
      -RoleDefinitionName $role `
      -Scope "/subscriptions/$SubId"
@@ -460,6 +460,11 @@ Set-AzKeyVaultSecret `
    -Name "SpokeSaName" `
    -SecretValue $spokeSaName
 
+Set-AzKeyVaultSecret `
+   -VaultName $KeyvaultName `
+   -Name "SpokeSaBlobContainerName" `
+   -SecretValue $BlobContainerName
+
 $KeyExpiryDate = (Get-Date).AddMonths(3).ToUniversalTime()
 Set-AzKeyVaultSecret `
    -VaultName $KeyvaultName `
@@ -473,3 +478,33 @@ Set-AzKeyVaultSecret `
    -SecretValue $spokeSaSecondarykey
 
 Write-Host "Various Keyvault secrets have been set!" -ForegroundColor Black -BackgroundColor Green
+
+if (Get-AzBillingAccount)
+{
+    Write-Host "Can get billing info, continuing..."
+    $BillingAccount = Get-AzBillingAccount
+    $billingAccountName = $BillingAccount.name
+    $BillingProfile = Get-AzBillingProfile -BillingAccountName $billingAccountName
+    $billingProfileName = $BillingProfile.name
+    $InvoiceSection = Get-AzInvoiceSection -BillingAccountName $billingAccountName -BillingProfileName $billingProfileName
+    $invoiceSectionName = $InvoiceSection.name
+
+    Set-AzKeyVaultSecret `
+   -VaultName $KeyvaultName `
+   -Name "BillingAccountName" `
+   -SecretValue $billingAccountName
+
+    Set-AzKeyVaultSecret `
+   -VaultName $KeyvaultName `
+   -Name "BillingProfileName" `
+   -SecretValue $billingProfileName
+
+    Set-AzKeyVaultSecret `
+   -VaultName $KeyvaultName `
+   -Name "InvoiceSectionName" `
+   -SecretValue $InvoiceSection
+}
+else
+{
+    Write-Host "Cant get billing info"
+}
