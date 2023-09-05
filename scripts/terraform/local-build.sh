@@ -46,12 +46,13 @@ terraform_run() {
             terraform workspace new ${terraform_workspace} || terraform workspace select $terraform_workspace
         terraform validate && \
             terraform fmt -recursive && \
-            terraform plan -out tfplan
+            terraform plan -out tfplan.plan
+            terraform show -json tfplan.plan | tee tfplan.json >/dev/null
     }
 
     # Terraform-Compliance Check
     terraform_compliance_check() {
-        terraform-compliance -p tfplan -f ${terraform_compliance_policy_path}
+        terraform-compliance -p tfplan.plan -f ${terraform_compliance_policy_path}
     }
 
     # TFSec Check
@@ -61,7 +62,6 @@ terraform_run() {
 
     # CheckOv Check
     checkov_check() {
-        terraform show -json tfplan | tee tfplan.json >/dev/null
         checkov -f tfplan.json --skip-check "${checkov_skipped_test}"
     }
 
