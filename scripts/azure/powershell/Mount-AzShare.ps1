@@ -26,6 +26,11 @@ if ([string]::IsNullOrEmpty($storageAccountName)) {
     return
 }
 
+New-SmbGlobalMapping -RemotePath $storageAccountName.file.core.windows.net `
+-Credential $storageAccountKey -LocalPath "${driveLetter}:" `
+-FullAccess @( "NT AUTHORITY\SYSTEM", "NT AUTHORITY\NetworkService" ) `
+-Persistent $true -RequirePrivacy $true
+
 Write-Output "Testing network connection to $storageAccountName.file.core.windows.net on port 445."
 $connectTestResult = Test-NetConnection -ComputerName "$storageAccountName.file.core.windows.net" -Port 445
 if ($connectTestResult.TcpTestSucceeded) {

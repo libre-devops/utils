@@ -6,7 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="c6168e06-52ea-46b9-9ce2-313145b40896" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/terraform/local-build.sh" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/terraform/local-build.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -68,6 +67,7 @@
       <workItem from="1693924470438" duration="227000" />
       <workItem from="1693945033568" duration="90000" />
       <workItem from="1693948618466" duration="1334000" />
+      <workItem from="1694001625219" duration="673000" />
     </task>
     <servers />
   </component>
